@@ -71,7 +71,7 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     <div class="section-head"><div><h2>Store Overview</h2><p id="rangeLabel">Latest date with data</p></div></div>
     <div class="kpis" id="kpis"></div>
     <div class="card" style="margin-bottom:14px">
-      <div class="latest-note"><div><h3 style="margin:0 0 3px">Latest Date — Full Sheet Detail</h3><div class="sub" style="margin:0">Every column from the newest NMS Daily block, including Receiving and estimated missed-sale fields.</div></div><div><span class="date" id="latestDetailDate">—</span><div class="hint">Swipe horizontally on mobile</div></div></div>
+      <div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">Sums each category across the selected dates. Margin % is recalculated from aggregated Sale and Cost of Goods; Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDetailDate">—</span><div class="hint">Swipe horizontally on mobile</div></div></div>
       <div class="tablewrap"><table class="data wide" id="latestDetailTable"></table></div>
     </div>
     <div class="grid2">
@@ -86,7 +86,7 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
 
   <section id="daily" class="section active">
     <div class="section-head"><div><h2>Daily Performance</h2><p>Opens automatically on the latest date that contains actual NMS data.</p></div><button class="btn small" onclick="downloadCSV()">Export CSV</button></div>
-    <div class="card" style="margin-bottom:14px"><div class="latest-note"><div><h3 style="margin:0 0 3px">Latest Date — All Columns</h3><div class="sub" style="margin:0">Mirrors the full column structure of your latest NMS Daily table.</div></div><div><span class="date" id="latestDailyDate">—</span><div class="hint">Swipe horizontally on mobile</div></div></div><div class="tablewrap"><table class="data wide" id="latestDailyTable"></table></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">For one date, shows that date. For a range, sums each category across the selected dates and recalculates weighted Margin %. Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDailyDate">—</span><div class="hint">Swipe horizontally on mobile</div></div></div><div class="tablewrap"><table class="data wide" id="latestDailyTable"></table></div></div>
     <div class="card"><h3>Daily Total History</h3><div class="sub">All available Total-row fields by date.</div><div class="tablewrap"><table class="data wide" id="dailyTable"></table></div></div>
   </section>
 
@@ -312,8 +312,36 @@ function insightObjects(){const rows=filteredTotals(),cats=categoryAgg(),a=total
 function insightHtml(i){return `<div class="insight ${i.type||''}"><div class="title">${esc(i.title)}</div><div class="txt">${esc(i.txt)}</div></div>`}
 function renderInsights(){const arr=insightObjects();$('#quickInsights').innerHTML=arr.slice(0,4).map(insightHtml).join('');$('#allInsights').innerHTML=arr.map(insightHtml).join('')}
 function latestDate(){const ds=dates();return ds.length?ds.at(-1):null}
-function latestDetailRows(){const d=latestDate();if(!d)return [];const items=state.data.items.filter(r=>r.date===d);const total=state.data.totals.find(r=>r.date===d);const rows=items.map((r,i)=>[String(i+1),esc(r.item),money(r.sale),money(r.cogs),pctMaybe(r.margin),moneyMaybe(r.returns),moneyMaybe(r.discount),moneyMaybe(r.profit),moneyMaybe(r.purchasing),moneyMaybe(r.receiving),moneyMaybe(r.stock),moneyMaybe(r.missedSale),moneyMaybe(r.missedCogs),moneyMaybe(r.missedProfit)]);if(total)rows.push(['','<b>Total</b>','<b>'+money(total.sale)+'</b>','<b>'+money(total.cogs)+'</b>','<b>'+pct(total.margin)+'</b>','<b>'+money(total.returns)+'</b>','<b>'+money(total.discount)+'</b>','<b>'+money(total.profit)+'</b>','<b>'+money(total.purchasing)+'</b>','<b>'+moneyMaybe(total.receiving)+'</b>','<b>'+moneyMaybe(total.stock)+'</b>','<b>'+moneyMaybe(total.missedSale)+'</b>','<b>'+moneyMaybe(total.missedCogs)+'</b>','<b>'+moneyMaybe(total.missedProfit)+'</b>']);return rows}
-function renderLatestDetail(){const d=latestDate(),headers=['#','Category','Sale','Cost of Goods','Margin %','Return','Discount','Profit','Purchasing','Receiving','Stock','Est. Missed Sale','Est. Missed COG','Est. Missed Profit'],rows=latestDetailRows();$('#latestDetailDate').textContent=d?fmtDate(d):'—';$('#latestDailyDate').textContent=d?fmtDate(d):'—';$('#latestDetailTable').innerHTML=tableHtml(headers,rows,true);$('#latestDailyTable').innerHTML=tableHtml(headers,rows,true)}
+function selectedPeriodLabel(){if(!state.from||!state.to)return '—';return state.from===state.to?fmtDate(state.from):`${fmtDate(state.from)} – ${fmtDate(state.to)}`}
+function aggregateSelectedCategories(){
+  const m=new Map();
+  const optional=['returns','discount','purchasing','receiving','missedSale','missedCogs','missedProfit'];
+  filteredItems().forEach(r=>{
+    if(!m.has(r.item))m.set(r.item,{item:r.item,sale:0,cogs:0,profit:0,returns:0,discount:0,purchasing:0,receiving:0,stock:null,missedSale:0,missedCogs:0,missedProfit:0,_seen:{},_stockDate:null});
+    const a=m.get(r.item);a.sale+=num(r.sale);a.cogs+=num(r.cogs);a.profit+=num(r.profit);
+    optional.forEach(k=>{if(r[k]!==null&&r[k]!==undefined){a[k]+=num(r[k]);a._seen[k]=true}});
+    if(r.stock!==null&&r.stock!==undefined&&(!a._stockDate||r.date>=a._stockDate)){a.stock=num(r.stock);a._stockDate=r.date;a._seen.stock=true}
+  });
+  return [...m.values()].map(a=>({...a,margin:a.sale?(a.sale-a.cogs)/a.sale*100:0}));
+}
+function selectedPeriodTotal(cats){
+  if(state.category!=='ALL'){
+    const t={sale:0,cogs:0,profit:0,returns:0,discount:0,purchasing:0,receiving:0,stock:null,missedSale:0,missedCogs:0,missedProfit:0,_seen:{}};
+    cats.forEach(a=>{t.sale+=a.sale;t.cogs+=a.cogs;t.profit+=a.profit;['returns','discount','purchasing','receiving','missedSale','missedCogs','missedProfit'].forEach(k=>{if(a._seen[k]){t[k]+=a[k];t._seen[k]=true}});if(a._seen.stock){t.stock=a.stock;t._seen.stock=true}});
+    t.margin=t.sale?(t.sale-t.cogs)/t.sale*100:0;return t;
+  }
+  const rows=filteredTotals(),t={sale:0,cogs:0,profit:0,returns:0,discount:0,purchasing:0,receiving:0,stock:null,missedSale:0,missedCogs:0,missedProfit:0,_seen:{},_stockDate:null};
+  rows.forEach(r=>{t.sale+=num(r.sale);t.cogs+=num(r.cogs);t.profit+=num(r.profit);['returns','discount','purchasing'].forEach(k=>{t[k]+=num(r[k]);t._seen[k]=true});['receiving','missedSale','missedCogs','missedProfit'].forEach(k=>{if(r[k]!==null&&r[k]!==undefined){t[k]+=num(r[k]);t._seen[k]=true}});if(r.stock!==null&&r.stock!==undefined&&(!t._stockDate||r.date>=t._stockDate)){t.stock=num(r.stock);t._stockDate=r.date;t._seen.stock=true}});
+  t.margin=t.sale?(t.sale-t.cogs)/t.sale*100:0;return t;
+}
+function aggMoney(a,k){return a._seen?.[k]?money(a[k]):'—'}
+function selectedDetailRows(){
+  const cats=aggregateSelectedCategories();
+  const rows=cats.map((r,i)=>[String(i+1),esc(r.item),money(r.sale),money(r.cogs),pct(r.margin),aggMoney(r,'returns'),aggMoney(r,'discount'),money(r.profit),aggMoney(r,'purchasing'),aggMoney(r,'receiving'),aggMoney(r,'stock'),aggMoney(r,'missedSale'),aggMoney(r,'missedCogs'),aggMoney(r,'missedProfit')]);
+  if(cats.length){const t=selectedPeriodTotal(cats);rows.push(['','<b>Total</b>','<b>'+money(t.sale)+'</b>','<b>'+money(t.cogs)+'</b>','<b>'+pct(t.margin)+'</b>','<b>'+aggMoney(t,'returns')+'</b>','<b>'+aggMoney(t,'discount')+'</b>','<b>'+money(t.profit)+'</b>','<b>'+aggMoney(t,'purchasing')+'</b>','<b>'+aggMoney(t,'receiving')+'</b>','<b>'+aggMoney(t,'stock')+'</b>','<b>'+aggMoney(t,'missedSale')+'</b>','<b>'+aggMoney(t,'missedCogs')+'</b>','<b>'+aggMoney(t,'missedProfit')+'</b>'])}
+  return rows;
+}
+function renderLatestDetail(){const headers=['#','Category','Sale','Cost of Goods','Margin %','Return','Discount','Profit','Purchasing','Receiving','Stock','Est. Missed Sale','Est. Missed COG','Est. Missed Profit'],rows=selectedDetailRows(),label=selectedPeriodLabel();$('#latestDetailDate').textContent=label;$('#latestDailyDate').textContent=label;$('#latestDetailTable').innerHTML=tableHtml(headers,rows,true);$('#latestDailyTable').innerHTML=tableHtml(headers,rows,true)}
 function renderTables(){const rows=[...filteredTotals()].reverse();$('#dailyTable').innerHTML=tableHtml(['Date','Sales','COGS','Margin','Return','Discount','Profit','Purchasing','Receiving','Stock','Est. Missed Sale','Est. Missed COG','Est. Missed Profit'],rows.map(r=>[fmtDate(r.date),money(r.sale),money(r.cogs),pct(r.margin),money(r.returns),money(r.discount),money(r.profit),money(r.purchasing),moneyMaybe(r.receiving),moneyMaybe(r.stock),moneyMaybe(r.missedSale),moneyMaybe(r.missedCogs),moneyMaybe(r.missedProfit)]))}
 function tableHtml(headers,rows,trusted=false){return `<thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map((v,i)=>`<td>${trusted?v:(i===0?esc(v):v)}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:var(--muted);padding:25px">No data in this range</td></tr>`}</tbody>`}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
