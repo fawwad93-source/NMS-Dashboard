@@ -3,7 +3,7 @@ name: NMS Sync and Deploy
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '0 21 * * *'
 
 permissions:
   contents: write
