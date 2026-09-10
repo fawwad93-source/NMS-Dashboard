@@ -1,0 +1,72 @@
+name: NMS Sync and Deploy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: nms-pages
+  cancel-in-progress: true
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Google Sheets dependencies
+        run: pip install -r requirements.txt
+
+      - name: Read NMS Daily from Google Sheets
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python scripts/update_nms_data.py
+
+      - name: Save latest data snapshot to repository
+        shell: bash
+        run: |
+          if git diff --quiet -- nms-data.json; then
+            echo "No data change to commit."
+          else
+            git config user.name "nms-dashboard-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add nms-data.json
+            git commit -m "Update NMS dashboard data"
+            git push
+          fi
+
+      - name: Build Pages artifact
+        shell: bash
+        run: |
+          rm -rf _site
+          mkdir _site
+          cp index.html manifest.webmanifest sw.js icon-192.png icon-512.png nms-data.json _site/
+          touch _site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
