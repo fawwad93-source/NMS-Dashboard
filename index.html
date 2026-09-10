@@ -172,6 +172,16 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
   }
 }
 
+
+/* v10: at-a-glance Daily KPI cards */
+.daily-kpis{margin-bottom:14px}
+@media(max-width:720px){
+  .daily-kpis .kpi{min-height:94px}
+  .daily-kpis .kpi-label{font-size:9.5px}
+  .daily-kpis .kpi-value{font-size:18px;margin-top:7px}
+  .daily-kpis .kpi-sub{font-size:10px;line-height:1.25}
+}
+
 </style>
 </head>
 <body>
@@ -221,6 +231,7 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
 
   <section id="daily" class="section active">
     <div class="section-head"><div><h2>Daily Performance</h2><p>Opens automatically on the latest date that contains actual NMS data.</p></div><button class="btn small" onclick="downloadCSV()">Export CSV</button></div>
+    <div class="kpis daily-kpis" id="dailyKpis"></div>
     <div class="card" style="margin-bottom:14px"><div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">For one date, shows that date. For a range, sums each category across the selected dates and recalculates weighted Margin %. Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDailyDate">—</span><div class="hint">Compact mobile cards</div></div></div><div class="tablewrap mobile-card-wrap"><table class="data wide mobile-card-table" id="latestDailyTable"></table></div></div>
     <div class="card"><h3 id="dailyHistoryTitle">Daily Total History</h3><div class="sub" id="dailyHistorySub">All available Total-row fields by date.</div><div class="tablewrap mobile-card-wrap"><table class="data wide mobile-card-table" id="dailyTable"></table></div></div>
   </section>
@@ -432,10 +443,28 @@ function filteredItems(){return state.data.items.filter(r=>r.date>=state.from&&r
 function totalsAgg(rows=filteredTotals()){const a=rows.reduce((z,r)=>{for(const k of ['sale','cogs','returns','discount','profit','purchasing','receiving','missedSale','missedCogs','missedProfit'])z[k]+=num(r[k]);if(r.stock!==null&&r.stock!==undefined)z.stock=num(r.stock);return z},{sale:0,cogs:0,returns:0,discount:0,profit:0,purchasing:0,receiving:0,stock:0,missedSale:0,missedCogs:0,missedProfit:0});a.margin=a.sale?a.profit/a.sale*100:0;a.purchaseRatio=a.sale?a.purchasing/a.sale*100:0;return a}
 function categoryAgg(){const m={}; filteredItems().forEach(r=>{let a=m[r.item]||(m[r.item]={item:r.item,sale:0,cogs:0,profit:0});a.sale+=r.sale;a.cogs+=r.cogs;a.profit+=r.sale-r.cogs});return Object.values(m).map(a=>({...a,margin:a.sale?a.profit/a.sale*100:0,share:0})).sort((a,b)=>b.sale-a.sale)}
 function previousPeriodAgg(){const cur=filteredTotals();if(!cur.length)return null;const n=cur.length,first=new Date(cur[0].date+'T00:00:00'),end=new Date(first);end.setDate(end.getDate()-1);const start=new Date(end);start.setDate(start.getDate()-n+1);const rows=state.data.totals.filter(r=>r.date>=iso(start)&&r.date<=iso(end));return rows.length?totalsAgg(rows):null}
-function renderAll(){if(!state.data)return; const a=totalsAgg(),prev=previousPeriodAgg(); const label=state.from===state.to?fmtDate(state.to):`${fmtDate(state.from)} – ${fmtDate(state.to)}`;$('#rangeLabel').textContent=label; renderKpis(a,prev); renderLatestDetail(); renderTrend(); renderCategories();renderPurchasing();renderInsights();renderTables()}
+function renderAll(){if(!state.data)return; const a=totalsAgg(),prev=previousPeriodAgg(); const label=state.from===state.to?fmtDate(state.to):`${fmtDate(state.from)} – ${fmtDate(state.to)}`;$('#rangeLabel').textContent=label; renderKpis(a,prev); renderDailyKpis(); renderLatestDetail(); renderTrend(); renderCategories();renderPurchasing();renderInsights();renderTables()}
 function delta(cur,prev){if(!prev||!Number.isFinite(prev)||prev===0)return null;return (cur-prev)/Math.abs(prev)*100}
 function kpi(label,value,sub,cls=''){return `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value ${cls}">${value}</div><div class="kpi-sub">${sub||''}</div></div>`}
 function renderKpis(a,p){const ds=filteredTotals();const d=delta(a.sale,p?.sale);$('#kpis').innerHTML=[kpi('Sales',money(a.sale),d===null?`${ds.length} day(s)`: `${d>=0?'▲':'▼'} ${Math.abs(d).toFixed(1)}% vs prior period`,d>=0?'good':'bad'),kpi('Gross Profit',money(a.profit),pct(a.margin)+' gross margin',a.profit>=0?'good':'bad'),kpi('Cost of Goods',money(a.cogs),a.sale?pct(a.cogs/a.sale*100)+' of sales':'—'),kpi('Purchasing',money(a.purchasing),pct(a.purchaseRatio)+' of sales',a.purchaseRatio>100?'warn':''),kpi('Returns',money(a.returns),a.sale?pct(a.returns/a.sale*100)+' of sales':'—'),kpi('Discounts',money(a.discount),a.sale?pct(a.discount/a.sale*100)+' of sales':'—')].join('')}
+function renderDailyKpis(){
+  const cats=aggregateSelectedCategories();
+  const a=selectedPeriodTotal(cats);
+  const scope=state.category==='ALL'?'All categories':state.category;
+  const days=[...new Set(filteredItems().map(r=>r.date))].length || filteredTotals().length;
+  const purchaseRatio=a.sale?num(a.purchasing)/a.sale*100:0;
+  const cogsRatio=a.sale?num(a.cogs)/a.sale*100:0;
+  const stockValue=a._seen?.stock?money(a.stock):'—';
+  const stockSub=a._seen?.stock?'Latest available snapshot':'No stock value entered';
+  $('#dailyKpis').innerHTML=[
+    kpi('Sales',money(a.sale),`${scope} • ${days} day${days===1?'':'s'}`,'good'),
+    kpi('Gross Profit',money(a.sale-a.cogs),`${pct(a.margin)} gross margin`,(a.sale-a.cogs)>=0?'good':'bad'),
+    kpi('Margin %',pct(a.margin),'Calculated from total Sales & COGS',a.margin>=15?'good':a.margin>0?'warn':''),
+    kpi('Cost of Goods',money(a.cogs),a.sale?`${pct(cogsRatio)} of sales`:'—'),
+    kpi('Purchasing',a._seen?.purchasing?money(a.purchasing):'—',a._seen?.purchasing?`${pct(purchaseRatio)} of sales`:'No purchasing value entered',purchaseRatio>100?'warn':''),
+    kpi('Stock',stockValue,stockSub)
+  ].join('');
+}
 function svgLine(el,series){const root=$(el),W=760,H=280,p={l:55,r:15,t:15,b:38}; if(!series.length)return root.innerHTML='<div class="chart-empty">No data in this period</div>';const max=Math.max(1,...series.flatMap(s=>[s.sale,s.profit]));const x=i=>p.l+(series.length===1?(W-p.l-p.r)/2:i*(W-p.l-p.r)/(series.length-1));const y=v=>p.t+(H-p.t-p.b)*(1-v/max);const points=k=>series.map((s,i)=>`${x(i)},${y(s[k])}`).join(' ');let grid='';for(let i=0;i<5;i++){const yy=p.t+i*(H-p.t-p.b)/4;const val=max*(1-i/4);grid+=`<line x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}" stroke="#e6efeb"/><text x="${p.l-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#7b8c86">${shortMoney(val)}</text>`}let labels='';const step=Math.max(1,Math.ceil(series.length/6));series.forEach((s,i)=>{if(i%step===0||i===series.length-1)labels+=`<text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="10" fill="#7b8c86">${fmtDate(s.date).replace(' 2026','')}</text>`});root.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}<polyline fill="none" stroke="#119576" stroke-width="3" vector-effect="non-scaling-stroke" points="${points('sale')}"/><polyline fill="none" stroke="#3567a8" stroke-width="2.5" vector-effect="non-scaling-stroke" points="${points('profit')}"/>${labels}</svg>`}
 function svgBars(el,data,valueKey='sale',percent=false){const root=$(el),W=680,H=280,p={l:110,r:25,t:10,b:10};const d=data.slice(0,9);if(!d.length)return root.innerHTML='<div class="chart-empty">No category data in this period</div>';const max=Math.max(1,...d.map(x=>Math.max(0,x[valueKey])));const bh=(H-p.t-p.b)/d.length;let s='';d.forEach((r,i)=>{const y=p.t+i*bh+bh*.18,w=(W-p.l-p.r)*(Math.max(0,r[valueKey])/max);const label=percent?pct(r[valueKey]):shortMoney(r[valueKey]);s+=`<text x="${p.l-8}" y="${y+bh*.45}" text-anchor="end" font-size="11" fill="#51635d">${esc(r.item)}</text><rect x="${p.l}" y="${y}" width="${w}" height="${bh*.55}" rx="5" fill="#119576"/><text x="${Math.min(W-p.r-4,p.l+w+6)}" y="${y+bh*.42}" font-size="10.5" fill="#51635d">${label}</text>`});root.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${s}</svg>`}
 function svgGrouped(el,rows){const root=$(el),W=760,H=220,p={l:55,r:15,t:10,b:35};if(!rows.length)return root.innerHTML='<div class="chart-empty">No data</div>';const max=Math.max(1,...rows.flatMap(r=>[r.sale,r.purchasing]));const slot=(W-p.l-p.r)/rows.length,bw=Math.min(22,slot*.28);let s='';for(let i=0;i<4;i++){const yy=p.t+i*(H-p.t-p.b)/3;s+=`<line x1="${p.l}" y1="${yy}" x2="${W-p.r}" y2="${yy}" stroke="#e6efeb"/>`}rows.forEach((r,i)=>{const cx=p.l+slot*(i+.5),hs=(H-p.t-p.b)*r.sale/max,hp=(H-p.t-p.b)*r.purchasing/max;s+=`<rect x="${cx-bw-2}" y="${H-p.b-hs}" width="${bw}" height="${hs}" rx="3" fill="#119576"/><rect x="${cx+2}" y="${H-p.b-hp}" width="${bw}" height="${hp}" rx="3" fill="#9b7a2f"/>`;if(rows.length<=10||i%Math.ceil(rows.length/8)===0)s+=`<text x="${cx}" y="${H-12}" text-anchor="middle" font-size="9.5" fill="#7b8c86">${fmtDate(r.date).split(' ').slice(0,2).join(' ')}</text>`});root.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${s}</svg>`}
