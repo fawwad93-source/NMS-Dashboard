@@ -37,6 +37,141 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
 .mobile-nav{display:none}.toast{position:fixed;right:18px;bottom:18px;z-index:100;background:#10231e;color:#fff;padding:11px 14px;border-radius:11px;font-size:12px;box-shadow:0 12px 35px rgba(0,0,0,.22);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}.footer{text-align:center;color:var(--muted);font-size:11px;padding:22px 0 82px}
 @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2,.sync-grid{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){body{font-size:13px}.topbar-inner{padding:10px 12px}.brand{min-width:0}.brand h1{font-size:15px}.brand p{display:none}.status{width:100%;order:3}.topbar .btn.install{display:none}nav.tabs{display:none}main{padding:12px 10px 86px}.section-head h2{font-size:18px}.filterbar{gap:6px}.seg{width:100%;overflow-x:auto}.seg button{flex:1}.kpis{grid-template-columns:repeat(2,1fr);gap:8px}.kpi{padding:11px;border-radius:13px}.kpi-value{font-size:19px}.grid2,.grid3{grid-template-columns:1fr;gap:10px}.card{padding:12px;border-radius:14px}.chart{height:245px}.insights{grid-template-columns:1fr}.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(6,1fr);left:8px;right:8px;bottom:8px;z-index:60;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;box-shadow:0 9px 30px rgba(20,63,51,.18);padding:5px}.mnav{border:0;background:transparent;border-radius:11px;padding:7px 2px;color:var(--muted);font-size:9.5px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px}.mnav b{font-size:17px;line-height:1}.mnav.active{background:var(--mint);color:var(--green)}.toast{left:10px;right:10px;bottom:86px}.footer{display:none}}
+
+/* v9: mobile no-swipe data cards */
+@media(max-width:720px){
+  .mobile-card-wrap{
+    overflow:visible;
+    border:0;
+    border-radius:0;
+    background:transparent;
+  }
+
+  .mobile-card-table,
+  .mobile-card-table.wide{
+    width:100%;
+    min-width:0 !important;
+    display:block;
+    white-space:normal;
+    font-size:12px;
+  }
+
+  .mobile-card-table thead{
+    display:none;
+  }
+
+  .mobile-card-table tbody{
+    display:grid;
+    gap:10px;
+    width:100%;
+  }
+
+  .mobile-card-table tr{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    column-gap:12px;
+    row-gap:0;
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:#fff;
+    box-shadow:0 2px 8px rgba(20,63,51,.04);
+  }
+
+  .mobile-card-table tr.total-row{
+    background:var(--mint);
+    border-color:#b9ddd4;
+  }
+
+  .mobile-card-table td{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+    gap:2px;
+    padding:7px 2px !important;
+    border-bottom:1px solid #edf3f0;
+    text-align:left !important;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+
+  .mobile-card-table td::before{
+    content:attr(data-label);
+    color:var(--muted);
+    font-size:9px;
+    line-height:1.15;
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.25px;
+  }
+
+  .mobile-card-table td[data-label="#"]{
+    display:none;
+  }
+
+  #latestDetailTable td[data-label="Category"],
+  #latestDailyTable td[data-label="Category"],
+  #dailyTable td[data-label="Date"]{
+    grid-column:1 / -1;
+    display:block;
+    padding:1px 2px 8px !important;
+    margin-bottom:2px;
+    border-bottom:1px solid var(--line);
+    color:var(--green);
+    font-size:14px;
+    font-weight:850;
+    line-height:1.25;
+  }
+
+  #latestDetailTable td[data-label="Category"]::before,
+  #latestDailyTable td[data-label="Category"]::before,
+  #dailyTable td[data-label="Date"]::before{
+    display:block;
+    margin-bottom:3px;
+    font-size:9px;
+  }
+
+  .mobile-card-table tr td:nth-last-child(-n+2){
+    border-bottom:0;
+  }
+
+  .mobile-card-table tr.empty-row{
+    display:block;
+    padding:0;
+    border:1px solid var(--line);
+  }
+
+  .mobile-card-table tr.empty-row td{
+    display:block;
+    border:0;
+    text-align:center !important;
+  }
+
+  .mobile-card-table tr.empty-row td::before{
+    display:none;
+  }
+
+  .latest-note .hint{
+    display:none;
+  }
+}
+
+@media(max-width:390px){
+  .mobile-card-table tr{
+    column-gap:8px;
+    padding:9px 10px;
+  }
+  .mobile-card-table td{
+    font-size:11.5px;
+  }
+  .mobile-card-table td::before{
+    font-size:8.5px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -71,8 +206,8 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     <div class="section-head"><div><h2>Store Overview</h2><p id="rangeLabel">Latest date with data</p></div></div>
     <div class="kpis" id="kpis"></div>
     <div class="card" style="margin-bottom:14px">
-      <div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">Sums each category across the selected dates. Margin % is recalculated from aggregated Sale and Cost of Goods; Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDetailDate">—</span><div class="hint">Swipe horizontally on mobile</div></div></div>
-      <div class="tablewrap"><table class="data wide" id="latestDetailTable"></table></div>
+      <div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">Sums each category across the selected dates. Margin % is recalculated from aggregated Sale and Cost of Goods; Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDetailDate">—</span><div class="hint">Compact mobile cards</div></div></div>
+      <div class="tablewrap mobile-card-wrap"><table class="data wide mobile-card-table" id="latestDetailTable"></table></div>
     </div>
     <div class="grid2">
       <div class="card"><h3>Sales & Profit Trend</h3><div class="sub">Daily sales with gross profit overlay.</div><div class="chart" id="trendChart"></div><div class="legend"><span><i class="g"></i>Sales</span><span><i class="b"></i>Gross profit</span></div></div>
@@ -86,8 +221,8 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
 
   <section id="daily" class="section active">
     <div class="section-head"><div><h2>Daily Performance</h2><p>Opens automatically on the latest date that contains actual NMS data.</p></div><button class="btn small" onclick="downloadCSV()">Export CSV</button></div>
-    <div class="card" style="margin-bottom:14px"><div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">For one date, shows that date. For a range, sums each category across the selected dates and recalculates weighted Margin %. Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDailyDate">—</span><div class="hint">Swipe horizontally on mobile</div></div></div><div class="tablewrap"><table class="data wide" id="latestDailyTable"></table></div></div>
-    <div class="card"><h3 id="dailyHistoryTitle">Daily Total History</h3><div class="sub" id="dailyHistorySub">All available Total-row fields by date.</div><div class="tablewrap"><table class="data wide" id="dailyTable"></table></div></div>
+    <div class="card" style="margin-bottom:14px"><div class="latest-note"><div><h3 style="margin:0 0 3px">Selected Period — All Columns</h3><div class="sub" style="margin:0">For one date, shows that date. For a range, sums each category across the selected dates and recalculates weighted Margin %. Stock uses the latest available snapshot in the range.</div></div><div><span class="date" id="latestDailyDate">—</span><div class="hint">Compact mobile cards</div></div></div><div class="tablewrap mobile-card-wrap"><table class="data wide mobile-card-table" id="latestDailyTable"></table></div></div>
+    <div class="card"><h3 id="dailyHistoryTitle">Daily Total History</h3><div class="sub" id="dailyHistorySub">All available Total-row fields by date.</div><div class="tablewrap mobile-card-wrap"><table class="data wide mobile-card-table" id="dailyTable"></table></div></div>
   </section>
 
   <section id="categories" class="section">
@@ -394,7 +529,13 @@ function renderTables(){
 
   $('#dailyTable').innerHTML=tableHtml(headers,rows);
 }
-function tableHtml(headers,rows,trusted=false){return `<thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map((v,i)=>`<td>${trusted?v:(i===0?esc(v):v)}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:var(--muted);padding:25px">No data in this range</td></tr>`}</tbody>`}
+function tableHtml(headers,rows,trusted=false){
+  const body=rows.length?rows.map(r=>{
+    const isTotal=r.some(v=>String(v).includes('>Total<')||String(v).trim()==='Total');
+    return `<tr class="${isTotal?'total-row':''}">${r.map((v,i)=>`<td data-label="${esc(headers[i]||'')}">${trusted?v:(i===0?esc(v):v)}</td>`).join('')}</tr>`;
+  }).join(''):`<tr class="empty-row"><td colspan="${headers.length}" data-label="" style="text-align:center;color:var(--muted);padding:25px">No data in this range</td></tr>`;
+  return `<thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${body}</tbody>`;
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function switchTab(tab){state.activeTab=tab;$$('.section').forEach(s=>s.classList.toggle('active',s.id===tab));$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));window.scrollTo({top:0,behavior:'smooth'})}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));$$('#rangeSeg button').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.range)));$('#fromDate').addEventListener('change',()=>{state.from=$('#fromDate').value;state.range='custom';$$('#rangeSeg button').forEach(b=>b.classList.remove('active'));renderAll()});$('#toDate').addEventListener('change',()=>{state.to=$('#toDate').value;state.range='custom';$$('#rangeSeg button').forEach(b=>b.classList.remove('active'));renderAll()});$('#categoryFilter').addEventListener('change',e=>{state.category=e.target.value;renderAll()});
