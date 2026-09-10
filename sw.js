@@ -1,4 +1,4 @@
-const CACHE = 'nms-dashboard-v5';
+const CACHE = 'nms-dashboard-v7';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
