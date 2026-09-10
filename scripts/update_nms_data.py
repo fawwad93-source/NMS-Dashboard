@@ -21,7 +21,7 @@ def num(v):
     s = clean(v)
     if not s or ERROR_RE.match(s):
         return None
-    s = re.sub(r'(?i)\b(?:Rs\.?|PKR)\b', '', s).replace(',', '').replace('%', '').strip()
+    s = re.sub(r'(?i)(?:Rs\.?|PKR)', '', s).replace(',', '').replace('%', '').strip()
     if s in {'-', '—'}:
         return None
     try:
@@ -41,7 +41,7 @@ def date_iso(v):
         except ValueError:
             pass
     # Allow extra text around a date such as "8 Sep 2026" in a formatted table header.
-    m = re.search(r'\b(\d{1,2})\s+([A-Za-z]{3,9})\s+(20\d{2})\b', s)
+    m = re.search(r'(?i)(\d{1,2})\s*([A-Za-z]{3,9})\s*(20\d{2})', s)
     if m:
         for fmt in ('%d %b %Y', '%d %B %Y'):
             try:
