@@ -182,6 +182,40 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
   .daily-kpis .kpi-sub{font-size:10px;line-height:1.25}
 }
 
+
+/* v11: NMS unpaid/consignment bills */
+.hidden{display:none!important}
+.bills-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;align-items:start}
+.bills-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bills-toolbar input,.bills-toolbar select{min-width:180px}
+.bill-list{display:grid;gap:9px}
+.bill-item{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.bill-item:hover{border-color:#aaccc1;background:#fbfdfc}
+.bill-company{font-weight:850;font-size:13px}.bill-meta{color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:3px}
+.bill-amount{text-align:right;font-weight:850}.bill-balance{font-size:11px;color:var(--muted);margin-top:3px}
+.status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;letter-spacing:.25px}
+.status-pill.unpaid{background:#fff1f1;color:#9f2830}.status-pill.partial{background:#fff7df;color:#8b6400}.status-pill.paid{background:#e8f7f1;color:#0b755d}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.form-field label{display:block;font-size:9.8px;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.35px;margin-bottom:4px}
+.form-field input,.form-field select,.form-field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;color:var(--ink);min-height:38px;font:inherit}
+.form-field textarea{min-height:76px;resize:vertical}.form-field.full{grid-column:1/-1}
+.bill-id-line{font-size:11px;color:var(--muted);margin:4px 0 12px}
+.filebox{border:1.5px dashed #a8c7bc;border-radius:12px;padding:12px;background:#fbfdfc}
+.filebox input{width:100%}.file-current{font-size:11px;margin-top:7px}
+.unsaved{display:none;background:#fff7df;border:1px solid #eed896;color:#7d5d00;border-radius:10px;padding:8px 10px;font-size:11px;margin:10px 0}.unsaved.show{display:block}
+.payment-panel{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.payment-history{display:grid;gap:7px;margin-top:10px}.payment-row{border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:11.5px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.bill-empty{padding:28px;text-align:center;color:var(--muted);font-size:12px}
+.backend-badge{font-size:10.5px;font-weight:800;color:var(--muted)}
+@media(max-width:1100px){.bills-layout{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .bills-toolbar>*{flex:1 1 140px}.bills-toolbar .btn{flex:0 0 auto}
+  .form-grid{grid-template-columns:1fr}.form-field.full{grid-column:auto}
+  .bill-item{grid-template-columns:1fr}.bill-amount{text-align:left}
+  .mobile-nav{grid-template-columns:repeat(7,1fr)}
+  .mnav{font-size:8.6px;padding-left:0;padding-right:0}.mnav b{font-size:15px}
+}
+
 </style>
 </head>
 <body>
@@ -197,6 +231,7 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     <button class="tab active" data-tab="daily">Daily</button>
     <button class="tab" data-tab="categories">Categories</button>
     <button class="tab" data-tab="purchasing">Purchasing</button>
+    <button class="tab" data-tab="bills">Bills</button>
     <button class="tab" data-tab="insights">Insights</button>
     <button class="tab" data-tab="data">Data & Sync</button>
   </nav>
@@ -251,6 +286,101 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     <div class="card"><div class="tablewrap"><table class="data" id="purchaseTable"></table></div></div>
   </section>
 
+
+  <section id="bills" class="section">
+    <div class="section-head">
+      <div><h2>Unpaid / Consignment Bills</h2><p>Track supplier invoices from receiving through payment, including original and signed paid-bill images.</p></div>
+      <div class="actions" style="margin:0"><button class="btn" onclick="loadBills(true)">↻ Refresh Bills</button><button class="btn primary" onclick="newBill()">+ New Bill</button></div>
+    </div>
+
+    <div class="kpis" id="billsKpis"></div>
+
+    <div id="billsNotConfigured" class="callout warn" style="margin-bottom:14px;display:none">
+      <b>Bills backend is not connected on this device.</b><br>
+      Open <b>Data & Sync → Unpaid Bills Backend</b>, enter the Apps Script Web App URL and private API token, then save the connection.
+    </div>
+
+    <div class="bills-toolbar">
+      <input id="billSearch" type="text" placeholder="Search supplier or invoice…" />
+      <select id="billStatusFilter">
+        <option value="OPEN">Open bills</option>
+        <option value="ALL">All statuses</option>
+        <option value="UNPAID">Unpaid</option>
+        <option value="PARTIALLY PAID">Partially paid</option>
+        <option value="PAID">Paid</option>
+      </select>
+      <span class="backend-badge" id="billsLastRefresh">—</span>
+    </div>
+
+    <div class="bills-layout">
+      <div class="card">
+        <h3>Bill Register</h3>
+        <div class="sub">Tap Edit to review a bill. Nothing is changed until you press UPDATE BILL DATA.</div>
+        <div class="bill-list" id="billList"><div class="bill-empty">Connect the Bills backend to load records.</div></div>
+      </div>
+
+      <div class="card hidden" id="billEditorCard">
+        <div class="section-head" style="margin-bottom:8px">
+          <div><h3 id="billEditorTitle" style="font-size:16px">New Bill</h3><div class="bill-id-line" id="billIdLine">Not saved yet</div></div>
+          <button class="btn small" onclick="closeBillEditor()">Close</button>
+        </div>
+        <div class="unsaved" id="billUnsaved">You have unsaved changes. They will not be written to Google Sheets until you press the update/save button.</div>
+
+        <div class="form-grid" id="billForm">
+          <div class="form-field"><label>Invoice Date *</label><input id="billInvoiceDate" type="date"></div>
+          <div class="form-field"><label>Invoice Number *</label><input id="billInvoiceNumber" type="text"></div>
+          <div class="form-field"><label>Company / Supplier *</label><input id="billCompanyName" type="text" placeholder="Free text for now"></div>
+          <div class="form-field"><label>Total Invoice Amount *</label><input id="billTotalAmount" type="number" min="0" step="0.01"></div>
+
+          <div class="form-field"><label>NMS Checker Name</label><input id="billCheckerName" type="text" placeholder="Any current NMS employee"></div>
+          <div class="form-field"><label>NMS Checker Sign</label><select id="billCheckerSign"><option value="">—</option><option>YES</option><option>NO</option></select></div>
+          <div class="form-field"><label>NMS Checker Date</label><input id="billCheckerDate" type="date"></div>
+          <div class="form-field"><label>Bill Recorded By *</label><select id="billRecordedBy"><option value="">— Select —</option><option>Jawwad</option><option>Fawwad</option></select></div>
+
+          <div class="form-field"><label>POS RV Number *</label><input id="billPosRvNumber" type="text" placeholder="Required before bill is accepted"></div>
+          <div class="form-field"><label>POS RV Date</label><input id="billPosRvDate" type="date"></div>
+          <div class="form-field"><label>POS Remarks</label><select id="billPosRemarks"><option value="">—</option><option>UNPAID</option><option>PAID</option></select></div>
+          <div class="form-field"><label>Receiving Payment Status</label><select id="billReceivingStatus"><option>UNPAID</option><option>PAID</option></select></div>
+
+          <div class="form-field"><label>Approved for Consignment / Unpaid</label><select id="billApprovedConsignment"><option value="">—</option><option>YES</option><option>NO</option></select></div>
+          <div class="form-field"><label>Approval Date</label><input id="billApprovalDate" type="date"></div>
+          <div class="form-field full"><label>Notes</label><textarea id="billNotes" placeholder="Optional bill notes"></textarea></div>
+
+          <div class="form-field full">
+            <label>Original Supplier Bill / Invoice *</label>
+            <div class="filebox">
+              <input id="billOriginalFile" type="file" accept="image/*,application/pdf">
+              <div class="fine">Images are compressed before upload. PDFs up to 4 MB are accepted.</div>
+              <div class="file-current" id="billOriginalCurrent"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="billSaveBtn" onclick="saveBill()">SAVE NEW BILL</button>
+          <button class="btn" onclick="closeBillEditor()">Cancel</button>
+        </div>
+
+        <div class="payment-panel hidden" id="billPaymentPanel">
+          <h3>Record Payment</h3>
+          <div class="sub">A signed/paid bill image or PDF is required. Each payment is saved separately in the payment history.</div>
+          <div class="form-grid">
+            <div class="form-field"><label>Payment Approval Date</label><input id="payApprovalDate" type="date"></div>
+            <div class="form-field"><label>Payment Approved By *</label><select id="payApprovedBy"><option value="">— Select —</option><option>Jawwad</option><option>Fawwad</option></select></div>
+            <div class="form-field"><label>Payment Date *</label><input id="payDate" type="date"></div>
+            <div class="form-field"><label>Payment Amount *</label><input id="payAmount" type="number" min="0" step="0.01"></div>
+            <div class="form-field"><label>Payment Done By / NMS Employee *</label><input id="payDoneBy" type="text" placeholder="Any current NMS employee"></div>
+            <div class="form-field"><label>NMS Employee Name</label><input id="payEmployeeName" type="text"></div>
+            <div class="form-field full"><label>Payment Notes</label><textarea id="payNotes"></textarea></div>
+            <div class="form-field full"><label>Signed / Paid Bill Picture or PDF *</label><div class="filebox"><input id="payProofFile" type="file" accept="image/*,application/pdf"></div></div>
+          </div>
+          <div class="actions"><button class="btn primary" onclick="recordBillPayment()">RECORD PAYMENT & UPLOAD PAID BILL</button></div>
+          <div class="payment-history" id="paymentHistory"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="insights" class="section">
     <div class="section-head"><div><h2>Management Insights</h2><p>Simple, decision-oriented signals from sales, margins and purchasing.</p></div></div>
     <div class="insights" id="allInsights"></div>
@@ -274,6 +404,17 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
         <div class="fine">A direct QuickBooks POS integration depends on the exact report/export format. This version is ready for CSV imports; once you provide one raw QuickBooks POS export, the importer can be mapped to it.</div>
       </div>
     </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Unpaid Bills Backend</h3>
+      <div class="sub">Google Apps Script writes bill data to the NMS Unpaid Bills sheet and uploads invoice pictures to your private Google Drive.</div>
+      <div class="grid2" style="margin:0">
+        <div class="field"><label>Apps Script Web App URL</label><input id="billsApiUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div class="field"><label>Private API Token</label><input id="billsApiToken" type="password" placeholder="Paste the token generated by setupNMSBillsSystem"></div>
+      </div>
+      <div class="actions"><button class="btn primary" onclick="saveBillsConnection()">Save Bills Connection</button><button class="btn" onclick="testBillsConnection()">Test Bills Connection</button><button class="btn danger" onclick="clearBillsConnection()">Clear</button></div>
+      <div class="fine">The private token is saved only in this device's browser/app storage. It is not written into GitHub or the public dashboard source.</div>
+    </div>
     <div class="grid2" style="margin-top:14px">
       <div class="callout"><b>Mobile app:</b> this package is a Progressive Web App (PWA). After hosting it on HTTPS, open it on your phone and use <b>Install App</b> / <b>Add to Home Screen</b>. It will launch in its own app window and retain the last successfully synced data.</div>
       <div class="callout warn"><b>Automatic sync:</b> GitHub Actions checks the NMS Daily sheet every hour and commits a new snapshot only when the data changes. The app keeps the last successful snapshot locally for offline/mobile use.</div>
@@ -288,6 +429,7 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
   <button class="mnav active" data-tab="daily"><b>▦</b>Daily</button>
   <button class="mnav" data-tab="categories"><b>◫</b>Categories</button>
   <button class="mnav" data-tab="purchasing"><b>⇄</b>Buy</button>
+  <button class="mnav" data-tab="bills"><b>▤</b>Bills</button>
   <button class="mnav" data-tab="insights"><b>✦</b>Insights</button>
   <button class="mnav" data-tab="data"><b>⚙</b>Data</button>
 </div>
@@ -318,6 +460,11 @@ const DEMO={
   ]
 };
 let state={data:null,meta:null,source:'embedded',range:'latest',from:null,to:null,category:'ALL',activeTab:'daily'};
+
+const BILLS_CFG_KEY='nmsBillsConfig';
+const BILLS_CACHE_KEY='nmsBillsCache';
+let billsState={bills:[],selected:null,loaded:false,loading:false,dirty:false};
+
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=v=>'Rs'+Math.round(Number(v)||0).toLocaleString('en-PK');
 const pct=v=>(Number(v)||0).toFixed(2)+'%';
@@ -350,6 +497,7 @@ function setData(data,source){
   populateCategories(); applyDefaultDates(); updateSyncStatus(); renderAll();
 }
 function loadCachedOrDemo(){
+  loadBillsConnectionUI();
   let cfg=DEFAULT_CFG; try{cfg=JSON.parse(lsGet('nmsConfig')||'null')||DEFAULT_CFG}catch(e){cfg=DEFAULT_CFG}; $('#sheetId').value=cfg.sheetId||DEFAULT_CFG.sheetId; $('#sheetGid').value=cfg.gid||DEFAULT_CFG.gid;
   try{
     const d=JSON.parse(lsGet('nmsData')||'null');
@@ -566,8 +714,260 @@ function tableHtml(headers,rows,trusted=false){
   return `<thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${body}</tbody>`;
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function switchTab(tab){state.activeTab=tab;$$('.section').forEach(s=>s.classList.toggle('active',s.id===tab));$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));window.scrollTo({top:0,behavior:'smooth'})}
+function switchTab(tab){
+  state.activeTab=tab;
+  $$('.section').forEach(s=>s.classList.toggle('active',s.id===tab));
+  $$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const fb=$('.filterbar'); if(fb)fb.style.display=(tab==='bills'||tab==='data')?'none':'flex';
+  if(tab==='bills')loadBills(false);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));$$('#rangeSeg button').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.range)));$('#fromDate').addEventListener('change',()=>{state.from=$('#fromDate').value;state.range='custom';$$('#rangeSeg button').forEach(b=>b.classList.remove('active'));renderAll()});$('#toDate').addEventListener('change',()=>{state.to=$('#toDate').value;state.range='custom';$$('#rangeSeg button').forEach(b=>b.classList.remove('active'));renderAll()});$('#categoryFilter').addEventListener('change',e=>{state.category=e.target.value;renderAll()});
+
+$('#billSearch')?.addEventListener('input',renderBills);
+$('#billStatusFilter')?.addEventListener('change',renderBills);
+$('#billForm')?.addEventListener('input',markBillDirty);
+$('#billForm')?.addEventListener('change',markBillDirty);
+
+
+function billsConfig(){
+  try{return JSON.parse(lsGet(BILLS_CFG_KEY)||'null')||{url:'',token:''}}catch(e){return {url:'',token:''}}
+}
+function loadBillsConnectionUI(){
+  const c=billsConfig();
+  const u=document.getElementById('billsApiUrl'),t=document.getElementById('billsApiToken');
+  if(u)u.value=c.url||''; if(t)t.value=c.token||'';
+  try{const cached=JSON.parse(lsGet(BILLS_CACHE_KEY)||'[]');if(Array.isArray(cached))billsState.bills=cached}catch(e){}
+}
+function saveBillsConnection(){
+  const url=($('#billsApiUrl')?.value||'').trim(),token=($('#billsApiToken')?.value||'').trim();
+  if(!url||!token){toast('Enter both the Apps Script URL and API token');return}
+  lsSet(BILLS_CFG_KEY,JSON.stringify({url,token}));
+  toast('Bills connection saved on this device');
+  testBillsConnection();
+}
+function clearBillsConnection(){
+  if(!confirm('Clear the Bills backend URL and token from this device?'))return;
+  lsRemove(BILLS_CFG_KEY);billsState.bills=[];billsState.loaded=false;loadBillsConnectionUI();renderBills();toast('Bills connection cleared');
+}
+function billsJsonp(action,params={}){
+  const cfg=billsConfig();
+  if(!cfg.url||!cfg.token)return Promise.reject(new Error('Bills backend is not configured'));
+  return new Promise((resolve,reject)=>{
+    const cb='__nmsBillsCb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const timer=setTimeout(()=>{cleanup();reject(new Error('Bills API timeout'))},20000);
+    const script=document.createElement('script');
+    function cleanup(){clearTimeout(timer);try{delete window[cb]}catch(e){};script.remove()}
+    window[cb]=data=>{cleanup();data?.ok?resolve(data):reject(new Error(data?.error||'Bills API error'))};
+    const q=new URLSearchParams({action,token:cfg.token,callback:cb,_:Date.now().toString(),...params});
+    script.src=cfg.url+(cfg.url.includes('?')?'&':'?')+q.toString();
+    script.onerror=()=>{cleanup();reject(new Error('Could not reach Bills API'))};
+    document.head.appendChild(script);
+  });
+}
+function billsPost(action,payload){
+  const cfg=billsConfig();
+  if(!cfg.url||!cfg.token)return Promise.reject(new Error('Bills backend is not configured'));
+  return new Promise((resolve,reject)=>{
+    const name='nmsBillsFrame_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const iframe=document.createElement('iframe');iframe.name=name;iframe.style.display='none';
+    const form=document.createElement('form');form.method='POST';form.action=cfg.url;form.target=name;form.style.display='none';
+    [['action',action],['token',cfg.token],['payload',JSON.stringify(payload)]].forEach(([n,v])=>{const i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;form.appendChild(i)});
+    let submitted=false;
+    const timer=setTimeout(()=>{cleanup();reject(new Error('Bills save timed out'))},45000);
+    function cleanup(){clearTimeout(timer);setTimeout(()=>{iframe.remove();form.remove()},50)}
+    iframe.onload=()=>{if(!submitted)return;cleanup();resolve(true)};
+    document.body.append(iframe,form);submitted=true;form.submit();
+  });
+}
+async function testBillsConnection(){
+  try{const r=await billsJsonp('ping');toast(r.message||'Bills backend connected')}catch(e){toast('Bills connection failed: '+e.message)}
+}
+async function loadBills(force=false){
+  const cfg=billsConfig();
+  const warn=$('#billsNotConfigured');
+  if(!cfg.url||!cfg.token){
+    if(warn)warn.style.display='block';
+    renderBills();
+    return;
+  }
+  if(warn)warn.style.display='none';
+  if(billsState.loading)return;
+  if(billsState.loaded&&!force){renderBills();return}
+  billsState.loading=true;
+  try{
+    const r=await billsJsonp('listBills');
+    billsState.bills=Array.isArray(r.bills)?r.bills:[];
+    billsState.loaded=true;
+    lsSet(BILLS_CACHE_KEY,JSON.stringify(billsState.bills));
+    $('#billsLastRefresh').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    try{const cached=JSON.parse(lsGet(BILLS_CACHE_KEY)||'[]');if(Array.isArray(cached))billsState.bills=cached}catch(_){}
+    $('#billsLastRefresh').textContent='Offline/cache';
+    toast('Could not refresh bills: '+e.message);
+  }finally{
+    billsState.loading=false;renderBills();
+  }
+}
+function billStatusClass(s){s=String(s||'').toUpperCase();return s==='PAID'?'paid':s.includes('PARTIALLY')?'partial':'unpaid'}
+function renderBills(){
+  const bills=billsState.bills||[];
+  const open=bills.filter(b=>b.currentStatus!=='PAID');
+  const totalOutstanding=open.reduce((s,b)=>s+num(b.unpaidAmount),0);
+  const unpaid=bills.filter(b=>b.currentStatus==='UNPAID').length;
+  const partial=bills.filter(b=>b.currentStatus==='PARTIALLY PAID').length;
+  const month=new Date().toISOString().slice(0,7);
+  const paidMonth=bills.filter(b=>b.currentStatus==='PAID'&&String(b.paymentDate||'').slice(0,7)===month).length;
+  const suppliers=new Set(open.map(b=>b.companyName).filter(Boolean)).size;
+  $('#billsKpis').innerHTML=[
+    kpi('Outstanding',money(totalOutstanding),'Across open supplier bills',totalOutstanding>0?'warn':'good'),
+    kpi('Open Bills',String(open.length),'Unpaid + partially paid'),
+    kpi('Unpaid',String(unpaid),'No payment recorded',unpaid?'warn':'good'),
+    kpi('Partially Paid',String(partial),'Still has balance',partial?'warn':''),
+    kpi('Paid This Month',String(paidMonth),'Bills fully settled this month','good'),
+    kpi('Open Suppliers',String(suppliers),'Suppliers with outstanding bills')
+  ].join('');
+  const q=($('#billSearch')?.value||'').trim().toLowerCase();
+  const sf=$('#billStatusFilter')?.value||'OPEN';
+  const filtered=bills.filter(b=>{
+    const statusOk=sf==='ALL'?true:sf==='OPEN'?b.currentStatus!=='PAID':b.currentStatus===sf;
+    const qOk=!q||(`${b.companyName||''} ${b.invoiceNumber||''} ${b.billId||''}`).toLowerCase().includes(q);
+    return statusOk&&qOk;
+  });
+  $('#billList').innerHTML=filtered.length?filtered.map(b=>`
+    <div class="bill-item">
+      <div>
+        <div class="bill-company">${esc(b.companyName||'Unnamed supplier')} <span class="status-pill ${billStatusClass(b.currentStatus)}">${esc(b.currentStatus||'UNPAID')}</span></div>
+        <div class="bill-meta">Invoice ${esc(b.invoiceNumber||'—')} • ${esc(fmtDate(b.invoiceDate)||'—')}<br>${esc(b.billId||'')}</div>
+      </div>
+      <div class="bill-amount">${money(b.totalInvoiceAmount)}<div class="bill-balance">Outstanding ${money(b.unpaidAmount)}</div><div class="actions" style="justify-content:flex-end;margin-top:6px"><button class="btn small" onclick="openBillEditor('${esc(b.billId)}')">Edit</button>${b.originalBillDriveLink?`<button class="btn small" onclick="window.open('${esc(b.originalBillDriveLink)}','_blank')">Original</button>`:''}</div></div>
+    </div>`).join(''):'<div class="bill-empty">No bills match this filter.</div>';
+}
+function newBill(){
+  billsState.selected=null;billsState.dirty=false;
+  $('#billEditorCard').classList.remove('hidden');$('#billPaymentPanel').classList.add('hidden');
+  $('#billEditorTitle').textContent='New Unpaid / Consignment Bill';$('#billIdLine').textContent='Not saved yet';
+  $('#billSaveBtn').textContent='SAVE NEW BILL';
+  clearBillForm();
+  $('#billInvoiceDate').value=new Date().toISOString().slice(0,10);
+  $('#billReceivingStatus').value='UNPAID';
+  markBillClean();
+  setTimeout(()=>$('#billEditorCard').scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+async function openBillEditor(id){
+  try{
+    const r=await billsJsonp('getBill',{billId:id});const b=r.bill;billsState.selected=b;billsState.dirty=false;
+    $('#billEditorCard').classList.remove('hidden');$('#billPaymentPanel').classList.remove('hidden');
+    $('#billEditorTitle').textContent='Edit Bill';$('#billIdLine').textContent=`${b.billId} • ${b.currentStatus} • Outstanding ${money(b.unpaidAmount)}`;
+    $('#billSaveBtn').textContent='UPDATE BILL DATA';
+    setVal('billInvoiceDate',b.invoiceDate);setVal('billInvoiceNumber',b.invoiceNumber);setVal('billCompanyName',b.companyName);setVal('billTotalAmount',b.totalInvoiceAmount);
+    setVal('billCheckerName',b.checkerName);setVal('billCheckerSign',b.checkerSign);setVal('billCheckerDate',b.checkerDate);setVal('billRecordedBy',b.billRecordedBy);
+    setVal('billPosRvNumber',b.posRvNumber);setVal('billPosRvDate',b.posRvDate);setVal('billPosRemarks',b.posRemarks);setVal('billReceivingStatus',b.receivingPaymentStatus||'UNPAID');
+    setVal('billApprovedConsignment',b.approvedConsignment);setVal('billApprovalDate',b.approvalDate);setVal('billNotes',b.notes);
+    $('#billOriginalFile').value='';
+    $('#billOriginalCurrent').innerHTML=b.originalBillDriveLink?`Current file: <a href="${esc(b.originalBillDriveLink)}" target="_blank" rel="noopener">Open original bill in Google Drive</a>`:'No original bill uploaded yet.';
+    renderPaymentHistory(b.payments||[]);
+    markBillClean();
+    setTimeout(()=>$('#billEditorCard').scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }catch(e){toast('Could not open bill: '+e.message)}
+}
+function closeBillEditor(){
+  if(billsState.dirty&&!confirm('Discard unsaved bill changes?'))return;
+  $('#billEditorCard').classList.add('hidden');billsState.selected=null;billsState.dirty=false;
+}
+function clearBillForm(){
+  ['billInvoiceDate','billInvoiceNumber','billCompanyName','billTotalAmount','billCheckerName','billCheckerDate','billRecordedBy','billPosRvNumber','billPosRvDate','billApprovalDate','billNotes'].forEach(id=>setVal(id,''));
+  ['billCheckerSign','billPosRemarks','billApprovedConsignment'].forEach(id=>setVal(id,''));
+  setVal('billReceivingStatus','UNPAID');$('#billOriginalFile').value='';$('#billOriginalCurrent').textContent='';
+}
+function setVal(id,v){const el=$('#'+id);if(el)el.value=v??''}
+function billPayload(){
+  return {
+    billId:billsState.selected?.billId||'',
+    invoiceDate:$('#billInvoiceDate').value,
+    invoiceNumber:$('#billInvoiceNumber').value.trim(),
+    companyName:$('#billCompanyName').value.trim(),
+    totalInvoiceAmount:num($('#billTotalAmount').value),
+    checkerName:$('#billCheckerName').value.trim(),
+    checkerSign:$('#billCheckerSign').value,
+    checkerDate:$('#billCheckerDate').value,
+    billRecordedBy:$('#billRecordedBy').value.trim(),
+    posRvNumber:$('#billPosRvNumber').value.trim(),
+    posRvDate:$('#billPosRvDate').value,
+    posRemarks:$('#billPosRemarks').value,
+    receivingPaymentStatus:$('#billReceivingStatus').value,
+    approvedConsignment:$('#billApprovedConsignment').value,
+    approvalDate:$('#billApprovalDate').value,
+    notes:$('#billNotes').value.trim(),
+    lastUpdatedBy:$('#billRecordedBy').value.trim()
+  };
+}
+async function saveBill(){
+  const p=billPayload();
+  if(!p.invoiceDate||!p.invoiceNumber||!p.companyName||!(p.totalInvoiceAmount>0)){toast('Invoice date, invoice number, supplier and amount are required');return}
+  if(!p.posRvNumber){toast('POS RV Number is compulsory. Enter the bill into POS purchasing first.');return}
+  if(!p.billRecordedBy){toast('Select Bill Recorded By: Jawwad or Fawwad');return}
+  if(!billsState.selected && !$('#billOriginalFile').files?.[0]){toast('Original supplier invoice picture/PDF is required for a new bill');return}
+  const btn=$('#billSaveBtn');btn.disabled=true;const original=btn.textContent;btn.textContent='Saving…';
+  try{
+    p.originalFile=await fileForBills($('#billOriginalFile').files?.[0]);
+    await billsPost(billsState.selected?'updateBill':'createBill',p);
+    billsState.loaded=false;await loadBills(true);
+    toast(billsState.selected?'Bill data updated':'New bill saved');
+    $('#billEditorCard').classList.add('hidden');billsState.selected=null;billsState.dirty=false;
+  }catch(e){toast('Bill save failed: '+e.message)}
+  finally{btn.disabled=false;btn.textContent=original}
+}
+async function recordBillPayment(){
+  if(!billsState.selected?.billId){toast('Save the bill first');return}
+  const file=$('#payProofFile').files?.[0];
+  if(!$('#payDate').value||!(num($('#payAmount').value)>0)||!file){toast('Payment date, amount and signed paid-bill picture/PDF are required');return}
+  if(!$('#payApprovedBy').value){toast('Select Payment Approved By: Jawwad or Fawwad');return}
+  if(!$('#payDoneBy').value.trim()&&!$('#payEmployeeName').value.trim()){toast('Enter the NMS employee who made/recorded the payment');return}
+  const payload={
+    billId:billsState.selected.billId,
+    paymentApprovalDate:$('#payApprovalDate').value,
+    paymentApprovedBy:$('#payApprovedBy').value.trim(),
+    paymentDate:$('#payDate').value,
+    paymentAmount:num($('#payAmount').value),
+    paymentDoneBy:$('#payDoneBy').value.trim(),
+    nmsEmployeeName:$('#payEmployeeName').value.trim(),
+    paymentNotes:$('#payNotes').value.trim(),
+    paidFile:await fileForBills(file)
+  };
+  try{
+    await billsPost('recordPayment',payload);
+    billsState.loaded=false;await loadBills(true);await openBillEditor(payload.billId);
+    ['payApprovalDate','payApprovedBy','payDate','payAmount','payDoneBy','payEmployeeName','payNotes'].forEach(id=>setVal(id,''));
+    $('#payProofFile').value='';toast('Payment recorded and signed paid bill uploaded');
+  }catch(e){toast('Payment failed: '+e.message)}
+}
+function renderPaymentHistory(payments){
+  $('#paymentHistory').innerHTML=payments.length?payments.map(p=>`<div class="payment-row"><div><b>${esc(fmtDate(p.paymentDate))}</b><br>${esc(p.paymentDoneBy||p.nmsEmployeeName||'')}</div><div style="text-align:right"><b>${money(p.paymentAmount)}</b>${p.paidBillDriveLink?`<br><a href="${esc(p.paidBillDriveLink)}" target="_blank" rel="noopener">Open signed bill</a>`:''}</div></div>`).join(''):'<div class="fine">No payments recorded yet.</div>';
+}
+function markBillDirty(){if($('#billEditorCard').classList.contains('hidden'))return;billsState.dirty=true;$('#billUnsaved').classList.add('show')}
+function markBillClean(){billsState.dirty=false;$('#billUnsaved').classList.remove('show')}
+async function fileForBills(file){
+  if(!file)return null;
+  if(file.type==='application/pdf'){
+    if(file.size>4*1024*1024)throw new Error('PDF must be 4 MB or smaller');
+    return {name:file.name,mimeType:file.type,dataBase64:await fileToBase64(file)};
+  }
+  if(!file.type.startsWith('image/'))throw new Error('Use an image or PDF file');
+  return await compressBillImage(file);
+}
+function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=()=>reject(new Error('Could not read file'));r.readAsDataURL(file)})}
+async function compressBillImage(file){
+  const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
+  const img=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=dataUrl});
+  const maxDim=1600,scale=Math.min(1,maxDim/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+  const blob=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',0.78));
+  if(!blob)throw new Error('Could not compress image');
+  if(blob.size>2.5*1024*1024)throw new Error('Image is still too large after compression');
+  return {name:file.name.replace(/\.[^.]+$/, '')+'.jpg',mimeType:'image/jpeg',dataBase64:await fileToBase64(blob)};
+}
+
 function downloadCSV(){const rows=[['Date','Sale','Cost of Goods','Margin %','Return','Discount','Profit','Purchasing','Receiving','Stock','Est. Missed Sale','Est. Missed COG','Est. Missed Profit'],...filteredTotals().map(r=>[r.date,r.sale,r.cogs,r.margin,r.returns,r.discount,r.profit,r.purchasing,r.receiving??'',r.stock??'',r.missedSale??'',r.missedCogs??'',r.missedProfit??''])];downloadText('NMS_daily_export.csv',rows.map(r=>r.map(csvCell).join(',')).join('\n'))}
 function downloadTemplate(){const text='Date,Type,Item,Sale,Cost of Goods,Margin,Return,Discount,Profit,Purchasing,Receiving,Stock,Est. Missed Sale,Est. Missed COG,Est. Missed Profit\n2026-09-08,total,Total,109978,91702,16.62,0,0,18276,116969,,3530115,,,\n2026-09-08,item,Medicine,98782,82163,16.82,,,16618,,,,,,\n2026-09-08,item,Surgical,2005,1361,32.10,,,644,,,,,,';downloadText('NMS_import_template.csv',text)}
 function csvCell(x){let s=String(x??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}function downloadText(name,text){const b=new Blob([text],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
