@@ -217,6 +217,54 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
 }
 
 
+
+/* v17: cash reconciliation + confirmation + historical metric cards */
+.cash-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.cash-form-section{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+.cash-form-section:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.cash-form-section h3{margin-bottom:10px}
+.cash-explain{font-size:11.5px;line-height:1.55;color:var(--muted);background:#f8fbfa;border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:10px}
+.cash-inline{display:flex;gap:7px;align-items:center}.cash-inline input{min-width:0;flex:1}.cash-inline .btn{white-space:nowrap}
+.cash-coverage{font-size:11px;line-height:1.5;color:var(--muted);padding:8px 10px;border-radius:9px;background:#f8fbfa;border:1px solid var(--line)}
+.cash-coverage.warn{background:#fff8e8;border-color:#f0dcaa;color:#6b510e}
+.cash-recon-result{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:14px;background:#f8fbfa;border:1px solid var(--line);border-radius:13px;padding:10px}
+.cash-recon-result>div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.cash-recon-result span{display:block;color:var(--muted);font-size:9.5px;font-weight:850;text-transform:uppercase;letter-spacing:.35px;margin-bottom:5px}
+.cash-recon-result b{font-size:16px}.cash-recon-result .cash-result-main{border-width:2px}.cash-recon-result .cash-result-main.good{border-color:#8fd4c1;background:#eefaf6}.cash-recon-result .cash-result-main.bad{border-color:#efb6b9;background:#fff5f5}.cash-recon-result .cash-result-main.warn{border-color:#edd08c;background:#fff9e9}
+.cash-audit-status{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;letter-spacing:.25px}
+.cash-audit-status.balanced{background:#e8f7f1;color:#0b755d}.cash-audit-status.short{background:#fff1f1;color:#9f2830}.cash-audit-status.excess{background:#fff7df;color:#8b6400}.cash-audit-status.baseline{background:#eef3f8;color:#466174}
+.cash-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cash-detail-row{border:1px solid var(--line);border-radius:9px;padding:9px}.cash-detail-row span{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase;font-weight:800;margin-bottom:3px}.cash-detail-row b{font-size:12.5px}
+#cashSaveBtn:disabled{opacity:.66;cursor:wait;filter:saturate(.7)}
+.cash-history-summary{margin-bottom:14px}
+.cash-history-toolbar{display:grid;grid-template-columns:minmax(240px,1.6fr) minmax(150px,.8fr) minmax(150px,.8fr) auto;gap:9px;align-items:end;margin:10px 0 8px}
+.cash-history-toolbar .form-field{margin:0}
+.cash-history-toolbar .btn{height:38px}
+.cash-history-label{font-size:11.5px;color:var(--muted);margin:4px 0 10px;line-height:1.45}
+.cash-metric-grid{display:grid;grid-template-columns:repeat(6,minmax(145px,1fr));gap:11px}
+.cash-primary-kpi{grid-column:span 2;border-width:2px}
+.cash-primary-kpi.gain{border-color:#8fd4c1;background:#eefaf6}
+.cash-primary-kpi.loss{border-color:#efb6b9;background:#fff5f5}
+.cash-primary-kpi.flat{border-color:#b8d2ca;background:#f5fbf9}
+.cash-confirm-overlay{position:fixed;inset:0;z-index:120;background:rgba(13,35,29,.48);display:flex;align-items:center;justify-content:center;padding:18px}
+.cash-confirm-overlay.hidden{display:none}
+.cash-confirm-box{width:min(560px,100%);background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(16,46,38,.28);padding:18px}
+.cash-confirm-title{font-size:20px;font-weight:900;margin-bottom:5px;color:var(--text)}
+.cash-confirm-sub{color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:12px}
+.cash-confirm-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.cash-confirm-summary>div{border:1px solid var(--line);border-radius:10px;padding:10px;background:#f8fbfa}
+.cash-confirm-summary span{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase;font-weight:850;letter-spacing:.35px;margin-bottom:4px}
+.cash-confirm-summary b{font-size:14px}
+.cash-confirm-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+@media(max-width:1100px){.cash-layout{grid-template-columns:1fr}.cash-recon-result{grid-template-columns:repeat(3,1fr)}.cash-metric-grid{grid-template-columns:repeat(3,1fr)}.cash-history-toolbar{grid-template-columns:1fr 1fr 1fr auto}}
+@media(max-width:720px){
+  .mobile-nav{grid-template-columns:repeat(8,1fr)}
+  .mnav{font-size:8px}.mnav b{font-size:14px}
+  .cash-recon-result{grid-template-columns:1fr 1fr}.cash-recon-result .cash-result-main{grid-column:1/-1}
+  .cash-detail-grid{grid-template-columns:1fr}.cash-inline{align-items:stretch}.cash-inline .btn{padding-left:7px;padding-right:7px}
+  .cash-history-toolbar{grid-template-columns:1fr 1fr}.cash-history-toolbar .history-select-wrap{grid-column:1/-1}.cash-history-toolbar .apply-wrap{grid-column:1/-1}.cash-history-toolbar .btn{width:100%}.cash-metric-grid{grid-template-columns:1fr 1fr;gap:8px}.cash-primary-kpi{grid-column:1/-1}.cash-confirm-summary{grid-template-columns:1fr 1fr}
+}
+
 /* v14: payment double-click protection */
 #recordPaymentBtn:disabled{
   opacity:.66;
@@ -240,6 +288,7 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     <button class="tab" data-tab="categories">Categories</button>
     <button class="tab" data-tab="purchasing">Purchasing</button>
     <button class="tab" data-tab="bills">Bills</button>
+    <button class="tab" data-tab="cash">Cash Recon</button>
     <button class="tab" data-tab="insights">Insights</button>
     <button class="tab" data-tab="data">Data & Sync</button>
   </nav>
@@ -389,6 +438,126 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     </div>
   </section>
 
+
+  <section id="cash" class="section">
+    <div class="section-head">
+      <div><h2>Cash Reconciliation</h2><p>Audit the physical cash register and explain every rupee through sales, paid purchasing, expenses, daily reserve deposits and current cash counted.</p></div>
+      <div class="actions" style="margin:0"><button class="btn" onclick="loadCashAudits(true)">↻ Refresh Audits</button><button class="btn primary" onclick="newCashAudit()">+ New Cash Audit</button></div>
+    </div>
+
+    <div class="card cash-history-summary">
+      <div class="section-head" style="margin-bottom:4px">
+        <div>
+          <h3 style="font-size:16px">Saved Cash Reconciliation Metrics</h3>
+          <div class="sub">Review the latest audit, any previous reconciliation, or aggregate results across a chosen date range. Net cash gain/loss is shown first.</div>
+        </div>
+      </div>
+      <div class="cash-history-toolbar">
+        <div class="form-field history-select-wrap">
+          <label>View Saved Reconciliation</label>
+          <select id="cashHistorySelect" onchange="cashHistorySelectionChanged()">
+            <option value="latest">Latest reconciliation</option>
+            <option value="range">Custom date range</option>
+          </select>
+        </div>
+        <div class="form-field"><label>From Date</label><input id="cashHistoryFrom" type="date"></div>
+        <div class="form-field"><label>To Date</label><input id="cashHistoryTo" type="date"></div>
+        <div class="apply-wrap"><button class="btn" onclick="applyCashHistoryRange()">APPLY RANGE</button></div>
+      </div>
+      <div class="cash-history-label" id="cashHistoryLabel">No saved reconciliation selected.</div>
+      <div class="cash-metric-grid" id="cashKpis"></div>
+    </div>
+
+    <div id="cashNotConfigured" class="callout warn" style="margin-bottom:14px;display:none">
+      <b>Cash Reconciliation backend is not connected on this device.</b><br>
+      It uses the same connection as Bills. Open <b>Data & Sync → NMS Operations Backend</b>, enter the Apps Script Web App URL and private API token, then save the connection.
+    </div>
+
+    <div class="cash-layout">
+      <div class="card">
+        <h3>Cash Audit History</h3>
+        <div class="sub">Each saved audit is retained as an audit record. The newest audit is used automatically as the starting point for the next reconciliation.</div>
+        <div class="bill-list" id="cashAuditList"><div class="bill-empty">Connect the operations backend to load cash audits.</div></div>
+      </div>
+
+      <div class="card hidden" id="cashAuditDetailCard">
+        <div class="section-head" style="margin-bottom:8px">
+          <div><h3 style="font-size:16px">Saved Audit Detail</h3><div class="bill-id-line" id="cashDetailId">—</div></div>
+          <button class="btn small" onclick="$('#cashAuditDetailCard').classList.add('hidden')">Close</button>
+        </div>
+        <div id="cashAuditDetail"></div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="cashEditorCard" style="margin-top:14px">
+      <div class="section-head" style="margin-bottom:8px">
+        <div><h3 style="font-size:16px">New Cash Audit</h3><div class="bill-id-line">The latest saved audit is used as the opening position. The first ever record is saved as a baseline.</div></div>
+        <button class="btn small" onclick="closeCashAuditEditor()">Close</button>
+      </div>
+
+      <div class="cash-form-section">
+        <h3>1. Audit Details</h3>
+        <div class="form-grid">
+          <div class="form-field"><label>Audit Date *</label><input id="cashAuditDate" type="date"></div>
+          <div class="form-field"><label>Audit Time *</label><input id="cashAuditTime" type="time"></div>
+          <div class="form-field"><label>Audited By *</label><input id="cashAuditedBy" type="text" list="cashAuditors" placeholder="Fawwad / Jawwad / employee"><datalist id="cashAuditors"><option value="Fawwad"><option value="Jawwad"></datalist></div>
+          <div class="form-field"><label>Previous Audit</label><select id="cashPreviousAudit" onchange="cashPreviousAuditChanged()"><option value="">No previous audit — create baseline</option></select></div>
+        </div>
+      </div>
+
+      <div class="cash-form-section">
+        <h3>2. Sales Since Last Audit</h3>
+        <div class="cash-explain">The app bridges the gap from the previous audit: previous audited cash + unaccounted remainder of that audit day's POS sale + full intervening-day sales + today's POS sale as of this audit.</div>
+        <div class="form-grid">
+          <div class="form-field"><label>Previous Audit Cash</label><input id="cashOpeningCash" type="number" step="0.01" readonly></div>
+          <div class="form-field"><label>Previous POS Sale Already Accounted</label><input id="cashPrevPosAccounted" type="number" step="0.01" readonly></div>
+          <div class="form-field"><label>Previous Audit Day Final POS Sale</label><input id="cashPrevFinalSale" type="number" min="0" step="0.01" placeholder="Auto from NMS Daily when available" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Intervening Full-Day Sales (Auto)</label><input id="cashInterveningSales" type="number" step="0.01" readonly></div>
+          <div class="form-field"><label>Missing Completed-Day Sales</label><input id="cashMissingSales" type="number" min="0" step="0.01" placeholder="Enter total only if dates are missing" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Other Sales Adjustment (+ / -)</label><input id="cashSalesAdjustment" type="number" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Current POS Sale As Of Audit *</label><input id="cashCurrentPosSale" type="number" min="0" step="0.01" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Total New Sales Since Last Audit</label><input id="cashSalesSince" type="number" step="0.01" readonly></div>
+          <div class="form-field full"><div id="cashSalesCoverage" class="cash-coverage">Select a previous audit to calculate the sales bridge.</div></div>
+        </div>
+      </div>
+
+      <div class="cash-form-section">
+        <h3>3. Cash Paid Out Since Last Audit</h3>
+        <div class="cash-explain"><b>Only enter amounts actually paid out of the cash register.</b> Unpaid/consignment inventory is excluded until it is actually paid.</div>
+        <div class="form-grid">
+          <div class="form-field"><label>Inventory Purchasing Paid</label><input id="cashPurchasingPaid" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Miscellaneous Expenses</label><input id="cashMiscExpenses" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Premises Rent Paid</label><input id="cashRentPaid" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Utilities / Electricity Paid</label><input id="cashUtilitiesPaid" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Daily Reserve / Deposit Set Aside</label><div class="cash-inline"><input id="cashReserveDeposit" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"><button type="button" class="btn small" onclick="addCashReserve15000()">+ Rs15,000</button></div></div>
+          <div class="form-field"><label>Other Cash Payouts</label><input id="cashOtherPayouts" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Total Register Outflows</label><input id="cashTotalOutflows" type="number" step="0.01" readonly></div>
+        </div>
+      </div>
+
+      <div class="cash-form-section">
+        <h3>4. Physical Cash Count</h3>
+        <div class="form-grid">
+          <div class="form-field"><label>Cash in Register (Notes) *</label><input id="cashNotes" type="number" min="0" step="0.01" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Loose Change + Coins + Toffees *</label><input id="cashLoose" type="number" min="0" step="0.01" oninput="recalcCashAudit()"></div>
+          <div class="form-field"><label>Actual Cash Counted</label><input id="cashActualTotal" type="number" step="0.01" readonly></div>
+          <div class="form-field"><label>Allowed Difference / Tolerance</label><input id="cashTolerance" type="number" min="0" step="0.01" value="0" oninput="recalcCashAudit()"></div>
+          <div class="form-field full"><label>Audit Notes</label><textarea id="cashNotesText" placeholder="Optional explanation, unusual payout, POS correction, missing sales data, etc."></textarea></div>
+        </div>
+      </div>
+
+      <div class="cash-recon-result" id="cashReconResult">
+        <div><span>Cash Before Outflows</span><b id="cashBeforeOutflowsView">—</b></div>
+        <div><span>Less: Cash Outflows</span><b id="cashOutflowsView">—</b></div>
+        <div><span>Expected Cash in Register</span><b id="cashExpectedView">—</b></div>
+        <div><span>Actual Cash Counted</span><b id="cashActualView">—</b></div>
+        <div class="cash-result-main"><span>Audit Result</span><b id="cashDifferenceView">BASELINE</b></div>
+      </div>
+
+      <div class="actions"><button id="cashSaveBtn" class="btn primary" onclick="saveCashAudit()">SAVE CASH AUDIT</button><button class="btn" onclick="closeCashAuditEditor()">Cancel</button></div>
+    </div>
+  </section>
+
   <section id="insights" class="section">
     <div class="section-head"><div><h2>Management Insights</h2><p>Simple, decision-oriented signals from sales, margins and purchasing.</p></div></div>
     <div class="insights" id="allInsights"></div>
@@ -414,13 +583,13 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
     </div>
 
     <div class="card" style="margin-top:14px">
-      <h3>Unpaid Bills Backend</h3>
-      <div class="sub">Google Apps Script writes bill data to the NMS Unpaid Bills sheet and uploads invoice pictures to your private Google Drive.</div>
+      <h3>NMS Operations Backend</h3>
+      <div class="sub">The same private Google Apps Script connection powers Unpaid Bills, bill images/payments and Cash Reconciliation audit records.</div>
       <div class="grid2" style="margin:0">
         <div class="field"><label>Apps Script Web App URL</label><input id="billsApiUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec"></div>
         <div class="field"><label>Private API Token</label><input id="billsApiToken" type="password" placeholder="Paste the token generated by setupNMSBillsSystem"></div>
       </div>
-      <div class="actions"><button class="btn primary" onclick="saveBillsConnection()">Save Bills Connection</button><button class="btn" onclick="testBillsConnection()">Test Bills Connection</button><button class="btn danger" onclick="clearBillsConnection()">Clear</button></div>
+      <div class="actions"><button class="btn primary" onclick="saveBillsConnection()">Save Operations Connection</button><button class="btn" onclick="testBillsConnection()">Test Connection</button><button class="btn danger" onclick="clearBillsConnection()">Clear</button></div>
       <div class="fine">The private token is saved only in this device's browser/app storage. It is not written into GitHub or the public dashboard source. v15 also pins the Apps Script request to a canonical account route to avoid Google's multi-account /u/N redirect problem.</div>
     </div>
     <div class="grid2" style="margin-top:14px">
@@ -438,9 +607,22 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
   <button class="mnav" data-tab="categories"><b>◫</b>Categories</button>
   <button class="mnav" data-tab="purchasing"><b>⇄</b>Buy</button>
   <button class="mnav" data-tab="bills"><b>▤</b>Bills</button>
+  <button class="mnav" data-tab="cash"><b>₹</b>Cash</button>
   <button class="mnav" data-tab="insights"><b>✦</b>Insights</button>
   <button class="mnav" data-tab="data"><b>⚙</b>Data</button>
 </div>
+<div id="cashConfirmModal" class="cash-confirm-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cashConfirmTitle">
+  <div class="cash-confirm-box">
+    <div class="cash-confirm-title" id="cashConfirmTitle">Confirm SAVE</div>
+    <div class="cash-confirm-sub">Please confirm that the physical cash count, POS sale, purchases, expenses and reserve/deposit amounts are correct. After YES, this reconciliation will be saved as a permanent audit record in the <b>NMS Cash Reconciliation</b> tab of your NMS Google Sheets file.</div>
+    <div class="cash-confirm-summary" id="cashConfirmSummary"></div>
+    <div class="cash-confirm-actions">
+      <button class="btn" onclick="cancelCashAuditSave()">NO — GO BACK</button>
+      <button class="btn primary" id="cashConfirmYesBtn" onclick="confirmCashAuditSave()">YES — SAVE</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 'use strict';
@@ -472,6 +654,8 @@ let state={data:null,meta:null,source:'embedded',range:'latest',from:null,to:nul
 const BILLS_CFG_KEY='nmsBillsConfig';
 const BILLS_CACHE_KEY='nmsBillsCache';
 let billsState={bills:[],selected:null,loaded:false,loading:false,dirty:false,paymentSaving:false};
+const CASH_CACHE_KEY='nmsCashAuditCache';
+let cashState={audits:[],loaded:false,loading:false,saving:false,selected:null,missingDates:[],pendingSavePayload:null,historyInitialized:false};
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=v=>'Rs'+Math.round(Number(v)||0).toLocaleString('en-PK');
@@ -506,6 +690,7 @@ function setData(data,source){
 }
 function loadCachedOrDemo(){
   loadBillsConnectionUI();
+  try{const c=JSON.parse(lsGet(CASH_CACHE_KEY)||'[]');if(Array.isArray(c))cashState.audits=c}catch(e){}
   let cfg=DEFAULT_CFG; try{cfg=JSON.parse(lsGet('nmsConfig')||'null')||DEFAULT_CFG}catch(e){cfg=DEFAULT_CFG}; $('#sheetId').value=cfg.sheetId||DEFAULT_CFG.sheetId; $('#sheetGid').value=cfg.gid||DEFAULT_CFG.gid;
   try{
     const d=JSON.parse(lsGet('nmsData')||'null');
@@ -726,8 +911,9 @@ function switchTab(tab){
   state.activeTab=tab;
   $$('.section').forEach(s=>s.classList.toggle('active',s.id===tab));
   $$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  const fb=$('.filterbar'); if(fb)fb.style.display=(tab==='bills'||tab==='data')?'none':'flex';
+  const fb=$('.filterbar'); if(fb)fb.style.display=(tab==='bills'||tab==='cash'||tab==='data')?'none':'flex';
   if(tab==='bills')loadBills(false);
+  if(tab==='cash')loadCashAudits(false);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));$$('#rangeSeg button').forEach(b=>b.addEventListener('click',()=>setRange(b.dataset.range)));$('#fromDate').addEventListener('change',()=>{state.from=$('#fromDate').value;state.range='custom';$$('#rangeSeg button').forEach(b=>b.classList.remove('active'));renderAll()});$('#toDate').addEventListener('change',()=>{state.to=$('#toDate').value;state.range='custom';$$('#rangeSeg button').forEach(b=>b.classList.remove('active'));renderAll()});$('#categoryFilter').addEventListener('change',e=>{state.category=e.target.value;renderAll()});
@@ -1019,6 +1205,287 @@ async function compressBillImage(file){
   if(blob.size>2.5*1024*1024)throw new Error('Image is still too large after compression');
   return {name:file.name.replace(/\.[^.]+$/, '')+'.jpg',mimeType:'image/jpeg',dataBase64:await fileToBase64(blob)};
 }
+
+
+/* ───────────────── CASH RECONCILIATION ───────────────── */
+function cashStatusClass(s){s=String(s||'').toUpperCase();return s==='BALANCED'?'balanced':s==='SHORT'?'short':s==='EXCESS'?'excess':'baseline'}
+function karachiNowParts(){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Karachi',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  const o={};parts.forEach(p=>{if(p.type!=='literal')o[p.type]=p.value});
+  return {date:`${o.year}-${o.month}-${o.day}`,time:`${o.hour}:${o.minute}`};
+}
+function isoAddDays(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+function dailySaleFor(date){const r=state.data?.totals?.find(x=>x.date===date);return r?num(r.sale):null}
+function cashAuditSortKey(a){return `${a.auditDate||''}T${a.auditTime||'00:00'}|${a.createdAt||''}`}
+function latestCashAudit(){return [...(cashState.audits||[])].sort((a,b)=>cashAuditSortKey(b).localeCompare(cashAuditSortKey(a)))[0]||null}
+
+async function loadCashAudits(force=false){
+  const cfg=billsConfig(),warn=$('#cashNotConfigured');
+  if(!cfg.url||!cfg.token){if(warn)warn.style.display='block';renderCashAudits();return}
+  if(warn)warn.style.display='none';
+  if(cashState.loading)return;
+  if(cashState.loaded&&!force){renderCashAudits();return}
+  cashState.loading=true;
+  try{
+    const r=await billsJsonp('listCashAudits');
+    cashState.audits=Array.isArray(r.audits)?r.audits:[];
+    cashState.loaded=true;lsSet(CASH_CACHE_KEY,JSON.stringify(cashState.audits));
+  }catch(e){
+    try{const c=JSON.parse(lsGet(CASH_CACHE_KEY)||'[]');if(Array.isArray(c))cashState.audits=c}catch(_){}
+    toast('Could not refresh cash audits: '+e.message);
+  }finally{cashState.loading=false;renderCashAudits()}
+}
+function cashSignedMoney(v){
+  const n=num(v);
+  if(n>0)return '+ '+money(n);
+  if(n<0)return '- '+money(Math.abs(n));
+  return money(0);
+}
+function cashMetricCard(label,value,sub,cls='',primary=false){
+  return `<div class="kpi ${primary?'cash-primary-kpi '+(cls==='good'?'gain':cls==='bad'?'loss':'flat'):''}"><div class="kpi-label">${esc(label)}</div><div class="kpi-value ${cls}">${value}</div><div class="kpi-sub">${esc(sub||'')}</div></div>`;
+}
+function sortedCashAudits(){
+  return [...(cashState.audits||[])].sort((a,b)=>cashAuditSortKey(b).localeCompare(cashAuditSortKey(a)));
+}
+function ensureCashHistoryControls(){
+  const sel=$('#cashHistorySelect'),from=$('#cashHistoryFrom'),to=$('#cashHistoryTo');
+  if(!sel||!from||!to)return;
+  const audits=sortedCashAudits(),old=sel.value||'latest';
+  sel.innerHTML='<option value="latest">Latest reconciliation</option><option value="range">Custom date range</option>'+
+    audits.map(a=>`<option value="audit:${esc(a.auditId)}">${esc(fmtDate(a.auditDate))} ${esc(a.auditTime||'')} — ${esc(a.auditedBy||'—')} — ${esc(a.status||'BASELINE')}</option>`).join('');
+  if(old==='latest'||old==='range'||audits.some(a=>`audit:${a.auditId}`===old))sel.value=old;else sel.value='latest';
+  if(audits.length&&!cashState.historyInitialized){
+    const dates=audits.map(a=>a.auditDate).filter(Boolean).sort();
+    from.value=dates[0]||'';to.value=dates[dates.length-1]||'';
+    cashState.historyInitialized=true;
+  }
+  const range=sel.value==='range';
+  from.disabled=!range;to.disabled=!range;
+}
+function selectedCashHistoryAudits(){
+  const audits=sortedCashAudits(),sel=$('#cashHistorySelect')?.value||'latest';
+  if(sel==='latest')return audits.slice(0,1);
+  if(sel.startsWith('audit:')){const id=sel.slice(6);return audits.filter(a=>a.auditId===id)}
+  const from=$('#cashHistoryFrom')?.value||'',to=$('#cashHistoryTo')?.value||'';
+  return audits.filter(a=>(!from||a.auditDate>=from)&&(!to||a.auditDate<=to));
+}
+function cashHistorySelectionChanged(){
+  const range=$('#cashHistorySelect')?.value==='range';
+  if($('#cashHistoryFrom'))$('#cashHistoryFrom').disabled=!range;
+  if($('#cashHistoryTo'))$('#cashHistoryTo').disabled=!range;
+  renderCashHistoricalMetrics();
+}
+function applyCashHistoryRange(){
+  const from=$('#cashHistoryFrom')?.value||'',to=$('#cashHistoryTo')?.value||'';
+  if(from&&to&&from>to){toast('From Date cannot be after To Date');return}
+  $('#cashHistorySelect').value='range';
+  cashHistorySelectionChanged();
+}
+function renderCashHistoricalMetrics(){
+  const box=$('#cashKpis'),label=$('#cashHistoryLabel');if(!box||!label)return;
+  const selected=selectedCashHistoryAudits(),mode=$('#cashHistorySelect')?.value||'latest';
+  if(!selected.length){
+    label.textContent=mode==='range'?'No saved cash reconciliations fall inside this date range.':'No saved cash reconciliation is available.';
+    box.innerHTML=cashMetricCard('Net Cash Gain / Loss','—','No reconciled audit data yet','',true)+cashMetricCard('Audits','0','Saved records in this view');
+    return;
+  }
+  const reconciled=selected.filter(a=>(a.status||'BASELINE')!=='BASELINE'&&a.differenceAmount!==null&&a.differenceAmount!==undefined);
+  const net=reconciled.reduce((s,a)=>s+num(a.differenceAmount),0);
+  const shortage=reconciled.reduce((s,a)=>s+num(a.shortageAmount),0);
+  const excess=reconciled.reduce((s,a)=>s+num(a.excessAmount),0);
+  const sales=reconciled.reduce((s,a)=>s+num(a.totalSalesSinceLastAudit),0);
+  const purchasing=selected.reduce((s,a)=>s+num(a.inventoryPurchasingPaid),0);
+  const reserve=selected.reduce((s,a)=>s+num(a.reserveDeposit),0);
+  const operating=selected.reduce((s,a)=>s+num(a.miscExpenses)+num(a.rentPaid)+num(a.utilityPayments)+num(a.otherCashPayouts),0);
+  const outflows=selected.reduce((s,a)=>s+num(a.totalCashOutflows),0);
+  const balanced=reconciled.filter(a=>a.status==='BALANCED').length,shortN=reconciled.filter(a=>a.status==='SHORT').length,excessN=reconciled.filter(a=>a.status==='EXCESS').length;
+  const avgAbs=reconciled.length?reconciled.reduce((s,a)=>s+Math.abs(num(a.differenceAmount)),0)/reconciled.length:0;
+  const latest=[...selected].sort((a,b)=>cashAuditSortKey(b).localeCompare(cashAuditSortKey(a)))[0];
+  const cls=net<0?'bad':net>0?'good':'';
+  if(selected.length===1){
+    const a=selected[0],isBase=(a.status||'BASELINE')==='BASELINE';
+    label.textContent=`Showing saved reconciliation ${a.auditId} • ${fmtDate(a.auditDate)} ${a.auditTime||''} • Audited by ${a.auditedBy||'—'}.`;
+    box.innerHTML=[
+      cashMetricCard('Net Cash Gain / Loss',isBase?'—':cashSignedMoney(a.differenceAmount),isBase?'Baseline audit — no difference calculated':a.status==='SHORT'?'Cash shortage':a.status==='EXCESS'?'Cash gain / excess':'Balanced',a.status==='SHORT'?'bad':a.status==='EXCESS'?'good':'',true),
+      cashMetricCard('Audit Status',a.status||'BASELINE',`${fmtDate(a.auditDate)} ${a.auditTime||''}`,a.status==='SHORT'?'bad':a.status==='EXCESS'?'good':''),
+      cashMetricCard('Expected Cash',isBase?'—':money(a.expectedCashInRegister),'Expected register cash after outflows'),
+      cashMetricCard('Actual Cash',money(a.actualCashCounted),'Physical cash counted'),
+      cashMetricCard('Sales Accounted',isBase?'—':money(a.totalSalesSinceLastAudit),'Sales bridged since prior audit'),
+      cashMetricCard('Total Register Outflows',money(a.totalCashOutflows),'All paid cash outflows'),
+      cashMetricCard('Inventory Purchasing Paid',money(a.inventoryPurchasingPaid),'Paid inventory only'),
+      cashMetricCard('Other Operating Payouts',money(num(a.miscExpenses)+num(a.rentPaid)+num(a.utilityPayments)+num(a.otherCashPayouts)),'Misc + rent + utilities + other'),
+      cashMetricCard('Reserve Set Aside',money(a.reserveDeposit),'Daily reserve / deposit'),
+      cashMetricCard('Cash Notes',money(a.actualCashNotes),'Notes physically counted'),
+      cashMetricCard('Loose Change / Toffees',money(a.looseChangeToffees),'Coins + toffees used as change'),
+      cashMetricCard('Audited By',a.auditedBy||'—',a.auditId||'')
+    ].join('');
+  }else{
+    const dates=selected.map(a=>a.auditDate).filter(Boolean).sort();
+    label.textContent=`Date-range summary: ${fmtDate(dates[0])} to ${fmtDate(dates[dates.length-1])} • ${selected.length} saved audit record${selected.length===1?'':'s'}.`;
+    box.innerHTML=[
+      cashMetricCard('Net Cash Gain / Loss',reconciled.length?cashSignedMoney(net):'—',net<0?'Net cash shortage across selected audits':net>0?'Net cash excess/gain across selected audits':'Shortages and gains offset to zero',cls,true),
+      cashMetricCard('Total Cash Short',money(shortage),`${shortN} short audit${shortN===1?'':'s'}`,shortage?'bad':''),
+      cashMetricCard('Total Cash Gain',money(excess),`${excessN} excess audit${excessN===1?'':'s'}`,excess?'good':''),
+      cashMetricCard('Audits',String(selected.length),`${reconciled.length} reconciled + ${selected.length-reconciled.length} baseline`),
+      cashMetricCard('Balanced Audits',String(balanced),`${shortN} short • ${excessN} excess`,balanced?'good':''),
+      cashMetricCard('Avg |Difference|',reconciled.length?money(avgAbs):'—','Average absolute reconciliation variance'),
+      cashMetricCard('Sales Accounted',money(sales),'Total sales bridged across selected reconciliations'),
+      cashMetricCard('Inventory Purchasing Paid',money(purchasing),'Paid inventory purchases'),
+      cashMetricCard('Other Operating Payouts',money(operating),'Misc + rent + utilities + other'),
+      cashMetricCard('Reserve Set Aside',money(reserve),'Total reserve/deposit amounts'),
+      cashMetricCard('Total Register Outflows',money(outflows),'All cash paid out / set aside'),
+      cashMetricCard('Latest Audit in Range',fmtDate(latest.auditDate),`${latest.auditTime||''} • ${latest.status||'BASELINE'}`)
+    ].join('');
+  }
+}
+function renderCashAudits(){
+  const audits=sortedCashAudits();
+  ensureCashHistoryControls();
+  renderCashHistoricalMetrics();
+  $('#cashAuditList').innerHTML=audits.length?audits.map(a=>`<div class="bill-item"><div><div class="bill-company">${esc(fmtDate(a.auditDate))} ${esc(a.auditTime||'')} <span class="cash-audit-status ${cashStatusClass(a.status)}">${esc(a.status||'BASELINE')}</span></div><div class="bill-meta">${esc(a.auditedBy||'—')} • ${esc(a.auditId||'')}<br>${a.status==='BASELINE'?'Opening baseline':`Expected ${money(a.expectedCashInRegister)} • Actual ${money(a.actualCashCounted)}`}</div></div><div class="bill-amount">${a.status==='SHORT'?'-'+money(a.shortageAmount):a.status==='EXCESS'?'+ '+money(a.excessAmount):a.status==='BALANCED'?money(0):'—'}<div class="actions" style="justify-content:flex-end;margin-top:6px"><button class="btn small" onclick="viewCashAudit('${esc(a.auditId)}')">View</button></div></div></div>`).join(''):'<div class="bill-empty">No cash audits yet. Create the first baseline audit.</div>';
+}
+function populateCashPreviousAudits(){
+  const sel=$('#cashPreviousAudit');if(!sel)return;
+  const current=sel.value;
+  const audits=[...(cashState.audits||[])].sort((a,b)=>cashAuditSortKey(b).localeCompare(cashAuditSortKey(a)));
+  sel.innerHTML='<option value="">No previous audit — create baseline</option>'+audits.map(a=>`<option value="${esc(a.auditId)}">${esc(fmtDate(a.auditDate))} ${esc(a.auditTime||'')} — ${esc(a.auditedBy||'')} — Cash ${money(a.actualCashCounted)}</option>`).join('');
+  if(audits.length)sel.value=audits[0].auditId;else sel.value='';
+  if(current&&audits.some(a=>a.auditId===current))sel.value=current;
+}
+function newCashAudit(){
+  const cfg=billsConfig();if(!cfg.url||!cfg.token){toast('Connect the NMS Operations Backend first');switchTab('data');return}
+  $('#cashEditorCard').classList.remove('hidden');cashState.selected=null;cashState.missingDates=[];
+  const now=karachiNowParts();setVal('cashAuditDate',now.date);setVal('cashAuditTime',now.time);setVal('cashAuditedBy','Fawwad');
+  ['cashPrevFinalSale','cashMissingSales','cashCurrentPosSale','cashNotes','cashLoose','cashNotesText'].forEach(id=>setVal(id,''));
+  ['cashSalesAdjustment','cashPurchasingPaid','cashMiscExpenses','cashRentPaid','cashUtilitiesPaid','cashReserveDeposit','cashOtherPayouts','cashTolerance'].forEach(id=>setVal(id,'0'));
+  populateCashPreviousAudits();cashPreviousAuditChanged();
+  setTimeout(()=>$('#cashEditorCard').scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+function closeCashAuditEditor(){if(cashState.saving)return;$('#cashEditorCard').classList.add('hidden')}
+function cashPreviousAuditChanged(){
+  const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit').value)||null;
+  if(!prev){setVal('cashOpeningCash','');setVal('cashPrevPosAccounted','');setVal('cashPrevFinalSale','');setVal('cashInterveningSales','0');cashState.missingDates=[];recalcCashAudit();return}
+  setVal('cashOpeningCash',num(prev.actualCashCounted));setVal('cashPrevPosAccounted',num(prev.currentPosSale));
+  const currentDate=$('#cashAuditDate').value;
+  if(currentDate&&currentDate>prev.auditDate){const finalSale=dailySaleFor(prev.auditDate);setVal('cashPrevFinalSale',finalSale===null?'':finalSale)}else setVal('cashPrevFinalSale','');
+  recalcCashAudit();
+}
+function computeCashBridge(){
+  const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit').value)||null;
+  const auditDate=$('#cashAuditDate').value,currentPos=num($('#cashCurrentPosSale').value),adjust=num($('#cashSalesAdjustment').value);
+  let missing=[],intervening=0,prevUnaccounted=0,totalSales=0,coverage='';
+  if(!prev){return {baseline:true,prev:null,intervening:0,missing,prevUnaccounted:0,totalSales:0,coverage:'First saved audit: this establishes the opening cash and POS-sale baseline. No shortage/excess is calculated.'}}
+  if(!auditDate||auditDate<prev.auditDate)return {error:'Audit date cannot be earlier than the selected previous audit.'};
+  if(auditDate===prev.auditDate){
+    totalSales=(currentPos-num(prev.currentPosSale))+adjust;
+    coverage='Same-day audit: new sales = current POS sale − POS sale already accounted for at the previous audit.';
+    if(totalSales<0)return {error:'Current POS sale cannot be lower than the POS sale already accounted for in the previous same-day audit.'};
+  }else{
+    const finalInput=$('#cashPrevFinalSale').value;
+    if(finalInput==='')return {needsPrevFinal:true,prev,missing,intervening,coverage:`Enter the final POS sale for ${fmtDate(prev.auditDate)}. The app could not find that completed day's total in NMS Daily.`};
+    const prevFinal=num(finalInput),prevPos=num(prev.currentPosSale);
+    if(prevFinal+0.001<prevPos)return {error:'Previous audit day final POS sale cannot be lower than the POS sale already accounted for at the previous audit.'};
+    prevUnaccounted=prevFinal-prevPos;
+    for(let d=isoAddDays(prev.auditDate,1);d<auditDate;d=isoAddDays(d,1)){
+      const s=dailySaleFor(d);if(s===null)missing.push(d);else intervening+=s;
+    }
+    const missingManual=$('#cashMissingSales').value===''?null:num($('#cashMissingSales').value);
+    totalSales=prevUnaccounted+intervening+(missingManual||0)+currentPos+adjust;
+    coverage=`Previous-day remainder ${money(prevUnaccounted)} + completed-day sales ${money(intervening)} + current POS ${money(currentPos)}${missing.length?` • Missing completed dates: ${missing.map(fmtDate).join(', ')}`:' • All intervening completed dates found in NMS Daily.'}`;
+  }
+  return {baseline:false,prev,intervening,missing,prevUnaccounted,totalSales,coverage};
+}
+function recalcCashAudit(){
+  const b=computeCashBridge();cashState.missingDates=b.missing||[];
+  if(b.intervening!==undefined)setVal('cashInterveningSales',b.intervening||0);
+  const cover=$('#cashSalesCoverage');if(cover){cover.textContent=b.error||b.coverage||'';cover.classList.toggle('warn',!!b.error||!!b.needsPrevFinal||(b.missing||[]).length>0)}
+  const outflows=['cashPurchasingPaid','cashMiscExpenses','cashRentPaid','cashUtilitiesPaid','cashReserveDeposit','cashOtherPayouts'].reduce((s,id)=>s+num($('#'+id)?.value),0);
+  const actual=num($('#cashNotes').value)+num($('#cashLoose').value);setVal('cashActualTotal',actual);setVal('cashTotalOutflows',outflows);
+  if(b.baseline||b.error||b.needsPrevFinal){setVal('cashSalesSince',b.baseline?0:'');$('#cashBeforeOutflowsView').textContent='—';$('#cashOutflowsView').textContent=money(outflows);$('#cashExpectedView').textContent='—';$('#cashActualView').textContent=money(actual);$('#cashDifferenceView').textContent=b.baseline?'BASELINE':'INCOMPLETE';const box=$('#cashDifferenceView').parentElement;box.className='cash-result-main '+(b.baseline?'':'warn');return}
+  setVal('cashSalesSince',b.totalSales);
+  const opening=num(b.prev.actualCashCounted),before=opening+b.totalSales,expected=before-outflows,diff=actual-expected,tol=num($('#cashTolerance').value);
+  let status=Math.abs(diff)<=tol?'BALANCED':diff<0?'SHORT':'EXCESS';
+  $('#cashBeforeOutflowsView').textContent=money(before);$('#cashOutflowsView').textContent=money(outflows);$('#cashExpectedView').textContent=money(expected);$('#cashActualView').textContent=money(actual);
+  $('#cashDifferenceView').textContent=status==='BALANCED'?'BALANCED':status==='SHORT'?`SHORT ${money(Math.abs(diff))}`:`EXCESS ${money(diff)}`;
+  const box=$('#cashDifferenceView').parentElement;box.className='cash-result-main '+(status==='BALANCED'?'good':status==='SHORT'?'bad':'warn');
+}
+function addCashReserve15000(){setVal('cashReserveDeposit',num($('#cashReserveDeposit').value)+15000);recalcCashAudit()}
+function cashPayload(){
+  const b=computeCashBridge(),prev=b.prev||null;
+  return {
+    auditDate:$('#cashAuditDate').value,auditTime:$('#cashAuditTime').value,auditedBy:$('#cashAuditedBy').value.trim(),previousAuditId:prev?.auditId||'',
+    previousAuditDayFinalSale:$('#cashPrevFinalSale').value===''?null:num($('#cashPrevFinalSale').value),interveningFullDaySales:num($('#cashInterveningSales').value),
+    missingCompletedDaySales:$('#cashMissingSales').value===''?0:num($('#cashMissingSales').value),otherSalesAdjustment:num($('#cashSalesAdjustment').value),currentPosSale:num($('#cashCurrentPosSale').value),
+    inventoryPurchasingPaid:num($('#cashPurchasingPaid').value),miscExpenses:num($('#cashMiscExpenses').value),rentPaid:num($('#cashRentPaid').value),utilityPayments:num($('#cashUtilitiesPaid').value),reserveDeposit:num($('#cashReserveDeposit').value),otherCashPayouts:num($('#cashOtherPayouts').value),
+    actualCashNotes:num($('#cashNotes').value),looseChangeToffees:num($('#cashLoose').value),toleranceAmount:num($('#cashTolerance').value),salesDataNote:b.coverage||'',notes:$('#cashNotesText').value.trim()
+  };
+}
+function validateCashAuditForSave(){
+  const p=cashPayload(),b=computeCashBridge();
+  if(!p.auditDate||!p.auditTime||!p.auditedBy){toast('Audit date, time and Audited By are required');return null}
+  if($('#cashCurrentPosSale').value===''){toast('Enter the current POS sale as of this audit');return null}
+  if($('#cashNotes').value===''||$('#cashLoose').value===''){toast('Enter cash notes and loose change / coins / toffees. Use 0 if none.');return null}
+  if(b.error){toast(b.error);return null}
+  if(b.needsPrevFinal){toast('Enter the previous audit day final POS sale');return null}
+  if((b.missing||[]).length&&$('#cashMissingSales').value===''){toast('Enter the total sales for the missing completed date(s), even if the total is 0');return null}
+  return {p,b};
+}
+function saveCashAudit(){
+  if(cashState.saving)return;
+  const v=validateCashAuditForSave();if(!v)return;
+  cashState.pendingSavePayload=v.p;
+  const b=v.b,actual=num(v.p.actualCashNotes)+num(v.p.looseChangeToffees),outflows=num(v.p.inventoryPurchasingPaid)+num(v.p.miscExpenses)+num(v.p.rentPaid)+num(v.p.utilityPayments)+num(v.p.reserveDeposit)+num(v.p.otherCashPayouts);
+  let expected=null,diff=null,status='BASELINE';
+  if(!b.baseline){
+    const opening=num(b.prev.actualCashCounted);expected=opening+num(b.totalSales)-outflows;diff=actual-expected;
+    const tol=num(v.p.toleranceAmount);status=Math.abs(diff)<=tol?'BALANCED':diff<0?'SHORT':'EXCESS';
+  }
+  $('#cashConfirmSummary').innerHTML=[
+    `<div><span>Audit</span><b>${esc(fmtDate(v.p.auditDate))} ${esc(v.p.auditTime)} • ${esc(v.p.auditedBy)}</b></div>`,
+    `<div><span>Status</span><b>${esc(status)}</b></div>`,
+    `<div><span>Expected Cash</span><b>${expected===null?'—':money(expected)}</b></div>`,
+    `<div><span>Actual Cash</span><b>${money(actual)}</b></div>`,
+    `<div><span>Cash Gain / Loss</span><b class="${diff===null?'':diff<0?'bad':diff>0?'good':''}">${diff===null?'—':cashSignedMoney(diff)}</b></div>`,
+    `<div><span>Total Outflows</span><b>${money(outflows)}</b></div>`
+  ].join('');
+  $('#cashConfirmModal').classList.remove('hidden');
+}
+function cancelCashAuditSave(){
+  if(cashState.saving)return;
+  cashState.pendingSavePayload=null;
+  $('#cashConfirmModal').classList.add('hidden');
+}
+async function confirmCashAuditSave(){
+  if(cashState.saving)return;
+  const p=cashState.pendingSavePayload;if(!p){$('#cashConfirmModal').classList.add('hidden');return}
+  const btn=$('#cashSaveBtn'),yes=$('#cashConfirmYesBtn'),orig=btn.textContent;
+  cashState.saving=true;btn.disabled=true;yes.disabled=true;btn.textContent='SAVING CASH AUDIT…';yes.textContent='SAVING…';toast('Saving cash reconciliation… please wait.');
+  try{
+    await billsPost('createCashAudit',p);
+    cashState.pendingSavePayload=null;cashState.loaded=false;
+    await loadCashAudits(true);
+    $('#cashConfirmModal').classList.add('hidden');$('#cashEditorCard').classList.add('hidden');
+    toast('Cash reconciliation saved to NMS Cash Reconciliation');
+  }catch(e){
+    toast('Cash audit save failed: '+e.message);
+  }finally{
+    cashState.saving=false;btn.disabled=false;yes.disabled=false;btn.textContent=orig;yes.textContent='YES — SAVE';
+  }
+}
+function viewCashAudit(id){
+  const a=cashState.audits.find(x=>x.auditId===id);if(!a)return;
+  $('#cashAuditDetailCard').classList.remove('hidden');$('#cashDetailId').textContent=`${a.auditId} • ${fmtDate(a.auditDate)} ${a.auditTime||''} • ${a.status}`;
+  const fields=[
+    ['Audited By',a.auditedBy],['Previous Audit',a.previousAuditId||'Baseline'],['Opening Cash',a.previousAuditId?money(a.openingCash):'—'],['Previous POS Accounted',a.previousAuditId?money(a.previousPosSaleAccounted):'—'],
+    ['Previous Day Final Sale',a.previousAuditId?money(a.previousAuditDayFinalSale):'—'],['Previous Day Unaccounted',a.previousAuditId?money(a.previousDayUnaccountedSale):'—'],['Intervening Full-Day Sales',money(a.interveningFullDaySales)],['Missing Completed-Day Sales',money(a.missingCompletedDaySales)],
+    ['Current POS Sale',money(a.currentPosSale)],['Total Sales Since Last Audit',a.status==='BASELINE'?'—':money(a.totalSalesSinceLastAudit)],['Inventory Purchasing Paid',money(a.inventoryPurchasingPaid)],['Misc Expenses',money(a.miscExpenses)],
+    ['Rent Paid',money(a.rentPaid)],['Utilities Paid',money(a.utilityPayments)],['Reserve / Deposit Set Aside',money(a.reserveDeposit)],['Other Cash Payouts',money(a.otherCashPayouts)],['Total Cash Outflows',money(a.totalCashOutflows)],
+    ['Expected Register Cash',a.status==='BASELINE'?'—':money(a.expectedCashInRegister)],['Cash Notes Counted',money(a.actualCashNotes)],['Loose Change / Toffees',money(a.looseChangeToffees)],['Actual Cash Counted',money(a.actualCashCounted)],['Difference',a.status==='BASELINE'?'—':money(a.differenceAmount)],['Status',a.status],['Notes',a.notes||'—']
+  ];
+  $('#cashAuditDetail').innerHTML=`<div class="cash-detail-grid">${fields.map(([k,v])=>`<div class="cash-detail-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>${a.salesDataNote?`<div class="cash-coverage" style="margin-top:10px">${esc(a.salesDataNote)}</div>`:''}`;
+  setTimeout(()=>$('#cashAuditDetailCard').scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+$('#cashAuditDate')?.addEventListener('change',cashPreviousAuditChanged);
 
 function downloadCSV(){const rows=[['Date','Sale','Cost of Goods','Margin %','Return','Discount','Profit','Purchasing','Receiving','Stock','Est. Missed Sale','Est. Missed COG','Est. Missed Profit'],...filteredTotals().map(r=>[r.date,r.sale,r.cogs,r.margin,r.returns,r.discount,r.profit,r.purchasing,r.receiving??'',r.stock??'',r.missedSale??'',r.missedCogs??'',r.missedProfit??''])];downloadText('NMS_daily_export.csv',rows.map(r=>r.map(csvCell).join(',')).join('\n'))}
 function downloadTemplate(){const text='Date,Type,Item,Sale,Cost of Goods,Margin,Return,Discount,Profit,Purchasing,Receiving,Stock,Est. Missed Sale,Est. Missed COG,Est. Missed Profit\n2026-09-08,total,Total,109978,91702,16.62,0,0,18276,116969,,3530115,,,\n2026-09-08,item,Medicine,98782,82163,16.82,,,16618,,,,,,\n2026-09-08,item,Surgical,2005,1361,32.10,,,644,,,,,,';downloadText('NMS_import_template.csv',text)}
