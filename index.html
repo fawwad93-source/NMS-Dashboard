@@ -255,6 +255,31 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
 .cash-confirm-summary span{display:block;color:var(--muted);font-size:9.5px;text-transform:uppercase;font-weight:850;letter-spacing:.35px;margin-bottom:4px}
 .cash-confirm-summary b{font-size:14px}
 .cash-confirm-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.cash-period-banner{
+  margin:0 0 12px;
+  padding:12px 14px;
+  border:2px solid #9fd4c6;
+  border-radius:12px;
+  background:#eefaf6;
+  color:#123d33;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:800;
+}
+.cash-period-banner b{font-size:14px}
+.cash-period-banner.baseline{
+  border-color:#c8d7e3;
+  background:#f3f7fa;
+  color:#405b6d;
+}
+.cash-field-help{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1.45;
+}
+.cash-field-help strong{color:var(--text)}
+
 
 @media(max-width:1100px){.cash-layout{grid-template-columns:1fr}.cash-recon-result{grid-template-columns:repeat(3,1fr)}.cash-metric-grid{grid-template-columns:repeat(3,1fr)}.cash-history-toolbar{grid-template-columns:1fr 1fr 1fr auto}}
 @media(max-width:720px){
@@ -503,17 +528,25 @@ select,input[type=date],input[type=text]{border:1px solid var(--line);border-rad
           <div class="form-field"><label>Audited By *</label><input id="cashAuditedBy" type="text" list="cashAuditors" placeholder="Fawwad / Jawwad / employee"><datalist id="cashAuditors"><option value="Fawwad"><option value="Jawwad"></datalist></div>
           <div class="form-field"><label>Previous Audit</label><select id="cashPreviousAudit" onchange="cashPreviousAuditChanged()"><option value="">No previous audit — create baseline</option></select></div>
         </div>
+        <div id="cashReconPeriod" class="cash-period-banner baseline"><b>BASELINE AUDIT</b> — this first audit establishes the opening cash and POS position.</div>
       </div>
 
       <div class="cash-form-section">
         <h3>2. Sales Since Last Audit</h3>
-        <div class="cash-explain">The app bridges the gap from the previous audit: previous audited cash + unaccounted remainder of that audit day's POS sale + full intervening-day sales + today's POS sale as of this audit.</div>
+        <div class="cash-explain">The app bridges the gap from the previous audit: previous audited cash + unaccounted remainder of that audit day's POS sale + the combined sales of all fully completed intervening days + today's POS sale as of this audit. Full-day sales can be auto-filled from NMS Daily or entered manually as one combined total.</div>
         <div class="form-grid">
           <div class="form-field"><label>Previous Audit Cash</label><input id="cashOpeningCash" type="number" step="0.01" readonly></div>
           <div class="form-field"><label>Previous POS Sale Already Accounted</label><input id="cashPrevPosAccounted" type="number" step="0.01" readonly></div>
           <div class="form-field"><label>Previous Audit Day Final POS Sale</label><input id="cashPrevFinalSale" type="number" min="0" step="0.01" placeholder="Auto from NMS Daily when available" oninput="recalcCashAudit()"></div>
-          <div class="form-field"><label>Intervening Full-Day Sales (Auto)</label><input id="cashInterveningSales" type="number" step="0.01" readonly></div>
-          <div class="form-field"><label>Missing Completed-Day Sales</label><input id="cashMissingSales" type="number" min="0" step="0.01" placeholder="Enter total only if dates are missing" oninput="recalcCashAudit()"></div>
+          <div class="form-field">
+            <label>Intervening Full-Day Sales — Combined Total</label>
+            <div class="cash-inline">
+              <input id="cashInterveningSales" type="number" min="0" step="0.01" value="0" oninput="cashInterveningManualChanged()">
+              <button type="button" class="btn small" onclick="autofillCashInterveningSales()">AUTO-FILL</button>
+            </div>
+            <div class="cash-field-help" id="cashInterveningHelp">Enter the <strong>combined sales total of all fully completed days</strong> between the previous audit day and today's audit day. Today's partial sale is entered separately below.</div>
+          </div>
+          <div class="form-field"><label>Missing Completed-Day Sales (Auto mode only)</label><input id="cashMissingSales" type="number" min="0" step="0.01" placeholder="Only if NMS Daily is missing a completed date" oninput="recalcCashAudit()"></div>
           <div class="form-field"><label>Other Sales Adjustment (+ / -)</label><input id="cashSalesAdjustment" type="number" step="0.01" value="0" oninput="recalcCashAudit()"></div>
           <div class="form-field"><label>Current POS Sale As Of Audit *</label><input id="cashCurrentPosSale" type="number" min="0" step="0.01" oninput="recalcCashAudit()"></div>
           <div class="form-field"><label>Total New Sales Since Last Audit</label><input id="cashSalesSince" type="number" step="0.01" readonly></div>
@@ -655,7 +688,7 @@ const BILLS_CFG_KEY='nmsBillsConfig';
 const BILLS_CACHE_KEY='nmsBillsCache';
 let billsState={bills:[],selected:null,loaded:false,loading:false,dirty:false,paymentSaving:false};
 const CASH_CACHE_KEY='nmsCashAuditCache';
-let cashState={audits:[],loaded:false,loading:false,saving:false,selected:null,missingDates:[],pendingSavePayload:null,historyInitialized:false};
+let cashState={audits:[],loaded:false,loading:false,saving:false,selected:null,missingDates:[],pendingSavePayload:null,historyInitialized:false,interveningSource:'auto'};
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=v=>'Rs'+Math.round(Number(v)||0).toLocaleString('en-PK');
@@ -1219,6 +1252,65 @@ function dailySaleFor(date){const r=state.data?.totals?.find(x=>x.date===date);r
 function cashAuditSortKey(a){return `${a.auditDate||''}T${a.auditTime||'00:00'}|${a.createdAt||''}`}
 function latestCashAudit(){return [...(cashState.audits||[])].sort((a,b)=>cashAuditSortKey(b).localeCompare(cashAuditSortKey(a)))[0]||null}
 
+function cashTime12(t){
+  if(!t)return '';
+  const m=String(t).match(/^(\d{1,2}):(\d{2})/);if(!m)return t;
+  let h=Number(m[1]),min=m[2],ap=h>=12?'PM':'AM';h=h%12||12;
+  return `${h}:${min} ${ap}`;
+}
+function updateCashReconPeriod(){
+  const box=$('#cashReconPeriod');if(!box)return;
+  const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit')?.value)||null;
+  const d=$('#cashAuditDate')?.value||'',t=$('#cashAuditTime')?.value||'';
+  if(!prev){
+    box.className='cash-period-banner baseline';
+    box.innerHTML=`<b>BASELINE AUDIT</b> — establishes the opening cash/POS position at ${esc(d?fmtDate(d):'this date')} ${esc(cashTime12(t)||'')}.`;
+    return;
+  }
+  box.className='cash-period-banner';
+  box.innerHTML=`<b>RECONCILIATION PERIOD:</b> ${esc(fmtDate(prev.auditDate))} ${esc(cashTime12(prev.auditTime)||prev.auditTime||'')} → ${esc(d?fmtDate(d):'Current audit date')} ${esc(cashTime12(t)||t||'')}`;
+}
+function completedInterveningInfo(prev,auditDate){
+  if(!prev||!auditDate||auditDate<=prev.auditDate)return {dates:[],autoTotal:0,missing:[]};
+  const dates=[],missing=[];let autoTotal=0;
+  for(let d=isoAddDays(prev.auditDate,1);d<auditDate;d=isoAddDays(d,1)){
+    dates.push(d);const s=dailySaleFor(d);if(s===null)missing.push(d);else autoTotal+=s;
+  }
+  return {dates,autoTotal,missing};
+}
+function updateCashInterveningHelp(info){
+  const el=$('#cashInterveningHelp');if(!el)return;
+  const dates=info?.dates||[];
+  if(!dates.length){
+    el.innerHTML='There are <strong>no full intervening days</strong> between these two audit dates. Keep this at 0.';
+    return;
+  }
+  const dayText=dates.map(fmtDate).join(', ');
+  const source=cashState.interveningSource==='manual'?'Manual combined total in use':'Auto-filled from NMS Daily';
+  el.innerHTML=`<strong>${source}.</strong> Full completed days included: ${esc(dayText)}. Enter/use one combined total for these days. The current audit day is excluded and goes in <strong>Current POS Sale As Of Audit</strong>.`;
+}
+function cashInterveningManualChanged(){
+  cashState.interveningSource='manual';
+  setVal('cashMissingSales','0');
+  if($('#cashMissingSales'))$('#cashMissingSales').disabled=true;
+  const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit')?.value)||null;
+  updateCashInterveningHelp(completedInterveningInfo(prev,$('#cashAuditDate')?.value||''));
+  recalcCashAudit();
+}
+function autofillCashInterveningSales(){
+  const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit')?.value)||null;
+  const info=completedInterveningInfo(prev,$('#cashAuditDate')?.value||'');
+  cashState.interveningSource='auto';
+  setVal('cashInterveningSales',info.autoTotal||0);
+  if($('#cashMissingSales')){
+    $('#cashMissingSales').disabled=false;
+    if(!info.missing.length)setVal('cashMissingSales','0');
+    else setVal('cashMissingSales','');
+  }
+  updateCashInterveningHelp(info);
+  recalcCashAudit();
+}
+
 async function loadCashAudits(force=false){
   const cfg=billsConfig(),warn=$('#cashNotConfigured');
   if(!cfg.url||!cfg.token){if(warn)warn.style.display='block';renderCashAudits();return}
@@ -1357,47 +1449,60 @@ function newCashAudit(){
   $('#cashEditorCard').classList.remove('hidden');cashState.selected=null;cashState.missingDates=[];
   const now=karachiNowParts();setVal('cashAuditDate',now.date);setVal('cashAuditTime',now.time);setVal('cashAuditedBy','Fawwad');
   ['cashPrevFinalSale','cashMissingSales','cashCurrentPosSale','cashNotes','cashLoose','cashNotesText'].forEach(id=>setVal(id,''));
-  ['cashSalesAdjustment','cashPurchasingPaid','cashMiscExpenses','cashRentPaid','cashUtilitiesPaid','cashReserveDeposit','cashOtherPayouts','cashTolerance'].forEach(id=>setVal(id,'0'));
+  ['cashInterveningSales','cashSalesAdjustment','cashPurchasingPaid','cashMiscExpenses','cashRentPaid','cashUtilitiesPaid','cashReserveDeposit','cashOtherPayouts','cashTolerance'].forEach(id=>setVal(id,'0'));
+  cashState.interveningSource='auto';
+  if($('#cashMissingSales'))$('#cashMissingSales').disabled=false;
   populateCashPreviousAudits();cashPreviousAuditChanged();
   setTimeout(()=>$('#cashEditorCard').scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
 function closeCashAuditEditor(){if(cashState.saving)return;$('#cashEditorCard').classList.add('hidden')}
 function cashPreviousAuditChanged(){
   const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit').value)||null;
-  if(!prev){setVal('cashOpeningCash','');setVal('cashPrevPosAccounted','');setVal('cashPrevFinalSale','');setVal('cashInterveningSales','0');cashState.missingDates=[];recalcCashAudit();return}
+  updateCashReconPeriod();
+  if(!prev){
+    setVal('cashOpeningCash','');setVal('cashPrevPosAccounted','');setVal('cashPrevFinalSale','');setVal('cashInterveningSales','0');setVal('cashMissingSales','0');
+    cashState.interveningSource='auto';cashState.missingDates=[];
+    if($('#cashMissingSales'))$('#cashMissingSales').disabled=false;
+    updateCashInterveningHelp({dates:[],autoTotal:0,missing:[]});recalcCashAudit();return
+  }
   setVal('cashOpeningCash',num(prev.actualCashCounted));setVal('cashPrevPosAccounted',num(prev.currentPosSale));
   const currentDate=$('#cashAuditDate').value;
   if(currentDate&&currentDate>prev.auditDate){const finalSale=dailySaleFor(prev.auditDate);setVal('cashPrevFinalSale',finalSale===null?'':finalSale)}else setVal('cashPrevFinalSale','');
-  recalcCashAudit();
+  autofillCashInterveningSales();
+  updateCashReconPeriod();
 }
 function computeCashBridge(){
   const prev=cashState.audits.find(a=>a.auditId===$('#cashPreviousAudit').value)||null;
   const auditDate=$('#cashAuditDate').value,currentPos=num($('#cashCurrentPosSale').value),adjust=num($('#cashSalesAdjustment').value);
-  let missing=[],intervening=0,prevUnaccounted=0,totalSales=0,coverage='';
-  if(!prev){return {baseline:true,prev:null,intervening:0,missing,prevUnaccounted:0,totalSales:0,coverage:'First saved audit: this establishes the opening cash and POS-sale baseline. No shortage/excess is calculated.'}}
+  let missing=[],autoIntervening=0,usedIntervening=num($('#cashInterveningSales').value),prevUnaccounted=0,totalSales=0,coverage='',dates=[];
+  if(!prev){return {baseline:true,prev:null,intervening:0,autoIntervening:0,missing,dates,prevUnaccounted:0,totalSales:0,coverage:'First saved audit: this establishes the opening cash and POS-sale baseline. No shortage/excess is calculated.'}}
   if(!auditDate||auditDate<prev.auditDate)return {error:'Audit date cannot be earlier than the selected previous audit.'};
   if(auditDate===prev.auditDate){
     totalSales=(currentPos-num(prev.currentPosSale))+adjust;
     coverage='Same-day audit: new sales = current POS sale − POS sale already accounted for at the previous audit.';
     if(totalSales<0)return {error:'Current POS sale cannot be lower than the POS sale already accounted for in the previous same-day audit.'};
+    usedIntervening=0;
   }else{
     const finalInput=$('#cashPrevFinalSale').value;
-    if(finalInput==='')return {needsPrevFinal:true,prev,missing,intervening,coverage:`Enter the final POS sale for ${fmtDate(prev.auditDate)}. The app could not find that completed day's total in NMS Daily.`};
+    if(finalInput==='')return {needsPrevFinal:true,prev,missing,dates,intervening:usedIntervening,autoIntervening,coverage:`Enter the final POS sale for ${fmtDate(prev.auditDate)}. The app could not find that completed day's total in NMS Daily.`};
     const prevFinal=num(finalInput),prevPos=num(prev.currentPosSale);
     if(prevFinal+0.001<prevPos)return {error:'Previous audit day final POS sale cannot be lower than the POS sale already accounted for at the previous audit.'};
     prevUnaccounted=prevFinal-prevPos;
-    for(let d=isoAddDays(prev.auditDate,1);d<auditDate;d=isoAddDays(d,1)){
-      const s=dailySaleFor(d);if(s===null)missing.push(d);else intervening+=s;
+    const info=completedInterveningInfo(prev,auditDate);dates=info.dates;missing=info.missing;autoIntervening=info.autoTotal;
+    const missingManual=cashState.interveningSource==='auto' ? ($('#cashMissingSales').value===''?null:num($('#cashMissingSales').value)) : 0;
+    totalSales=prevUnaccounted+usedIntervening+(missingManual||0)+currentPos+adjust;
+    if(cashState.interveningSource==='manual'){
+      coverage=`Previous-audit-day remainder ${money(prevUnaccounted)} + manually entered combined full-day sales ${money(usedIntervening)} + current POS ${money(currentPos)}. Manual full-day total covers: ${dates.length?dates.map(fmtDate).join(', '):'no intervening full days'}.`;
+    }else{
+      coverage=`Previous-audit-day remainder ${money(prevUnaccounted)} + auto full-day sales ${money(usedIntervening)} + current POS ${money(currentPos)}${missing.length?` • Missing completed dates: ${missing.map(fmtDate).join(', ')}`:' • All intervening completed dates found in NMS Daily.'}`;
     }
-    const missingManual=$('#cashMissingSales').value===''?null:num($('#cashMissingSales').value);
-    totalSales=prevUnaccounted+intervening+(missingManual||0)+currentPos+adjust;
-    coverage=`Previous-day remainder ${money(prevUnaccounted)} + completed-day sales ${money(intervening)} + current POS ${money(currentPos)}${missing.length?` • Missing completed dates: ${missing.map(fmtDate).join(', ')}`:' • All intervening completed dates found in NMS Daily.'}`;
   }
-  return {baseline:false,prev,intervening,missing,prevUnaccounted,totalSales,coverage};
+  return {baseline:false,prev,intervening:usedIntervening,autoIntervening,missing,dates,prevUnaccounted,totalSales,coverage};
 }
 function recalcCashAudit(){
+  updateCashReconPeriod();
   const b=computeCashBridge();cashState.missingDates=b.missing||[];
-  if(b.intervening!==undefined)setVal('cashInterveningSales',b.intervening||0);
+  updateCashInterveningHelp({dates:b.dates||[],autoTotal:b.autoIntervening||0,missing:b.missing||[]});
   const cover=$('#cashSalesCoverage');if(cover){cover.textContent=b.error||b.coverage||'';cover.classList.toggle('warn',!!b.error||!!b.needsPrevFinal||(b.missing||[]).length>0)}
   const outflows=['cashPurchasingPaid','cashMiscExpenses','cashRentPaid','cashUtilitiesPaid','cashReserveDeposit','cashOtherPayouts'].reduce((s,id)=>s+num($('#'+id)?.value),0);
   const actual=num($('#cashNotes').value)+num($('#cashLoose').value);setVal('cashActualTotal',actual);setVal('cashTotalOutflows',outflows);
@@ -1427,7 +1532,7 @@ function validateCashAuditForSave(){
   if($('#cashNotes').value===''||$('#cashLoose').value===''){toast('Enter cash notes and loose change / coins / toffees. Use 0 if none.');return null}
   if(b.error){toast(b.error);return null}
   if(b.needsPrevFinal){toast('Enter the previous audit day final POS sale');return null}
-  if((b.missing||[]).length&&$('#cashMissingSales').value===''){toast('Enter the total sales for the missing completed date(s), even if the total is 0');return null}
+  if(cashState.interveningSource==='auto'&&(b.missing||[]).length&&$('#cashMissingSales').value===''){toast('Auto mode is missing completed date(s). Enter their combined sales in Missing Completed-Day Sales, or type the full combined total into Intervening Full-Day Sales.');return null}
   return {p,b};
 }
 function saveCashAudit(){
@@ -1486,6 +1591,7 @@ function viewCashAudit(id){
   setTimeout(()=>$('#cashAuditDetailCard').scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
 $('#cashAuditDate')?.addEventListener('change',cashPreviousAuditChanged);
+$('#cashAuditTime')?.addEventListener('change',()=>{updateCashReconPeriod();recalcCashAudit()});
 
 function downloadCSV(){const rows=[['Date','Sale','Cost of Goods','Margin %','Return','Discount','Profit','Purchasing','Receiving','Stock','Est. Missed Sale','Est. Missed COG','Est. Missed Profit'],...filteredTotals().map(r=>[r.date,r.sale,r.cogs,r.margin,r.returns,r.discount,r.profit,r.purchasing,r.receiving??'',r.stock??'',r.missedSale??'',r.missedCogs??'',r.missedProfit??''])];downloadText('NMS_daily_export.csv',rows.map(r=>r.map(csvCell).join(',')).join('\n'))}
 function downloadTemplate(){const text='Date,Type,Item,Sale,Cost of Goods,Margin,Return,Discount,Profit,Purchasing,Receiving,Stock,Est. Missed Sale,Est. Missed COG,Est. Missed Profit\n2026-09-08,total,Total,109978,91702,16.62,0,0,18276,116969,,3530115,,,\n2026-09-08,item,Medicine,98782,82163,16.82,,,16618,,,,,,\n2026-09-08,item,Surgical,2005,1361,32.10,,,644,,,,,,';downloadText('NMS_import_template.csv',text)}
